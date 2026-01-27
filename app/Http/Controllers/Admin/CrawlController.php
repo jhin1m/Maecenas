@@ -41,6 +41,7 @@ class CrawlController extends Controller
         $comic->status = $request->status;
         $comic->thumbnail = $request->thumbnail;
         $comic->content = $request->content;
+        $comic->total_views = $request->views ?? 0;
         $comic->save();
 
         // Add Category
@@ -194,6 +195,7 @@ class CrawlController extends Controller
                             'title' => $fullChapterName,
                             'slug' => 'chuong-' . $nameChapter,
                             'chapter_number' => $nameChapter,
+                            'views' => $chapterData['views'] ?? 0,
                             'created_at' => now(),
                             'updated_at' => now()
                         ]);
