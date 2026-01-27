@@ -27,7 +27,8 @@ use App\Models\Blog;
 
 class HomeController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $seo = DB::table('seo')->get();
         SEOTools::setTitle($seo[0]->value);
         SEOTools::setDescription($seo[4]->value);
@@ -45,7 +46,7 @@ class HomeController extends Controller
             return Category::limit(4)->withCount('comics')->orderByDesc('comics_count')->get();
         });
 
-        $ranking = Cache::remember('ranking', 3600*5, function () {
+        $ranking = Cache::remember('ranking', 3600 * 5, function () {
             $comicsDaily = Comic::withCount('chapters')
                 ->select('name', 'slug', 'thumbnail', 'view_day as view_total', 'rating')
                 ->with('lastChapter')
@@ -106,9 +107,10 @@ class HomeController extends Controller
         ));
     }
 
-    public function showDetailComic($slug){
+    public function showDetailComic($slug)
+    {
         $comic = Comic::where('slug', $slug)->withCount('follows')->first();
-        if(!$comic){
+        if (!$comic) {
             abort(404);
         }
 
@@ -130,14 +132,14 @@ class HomeController extends Controller
         $metaHtml = $seo[6]->value;
         SEOMeta::addMeta('article:published_time', now(), 'property');
         $follow = false;
-        if(Auth::check()){
+        if (Auth::check()) {
             $user = Auth::user();
             $check = DB::table('follows')->where('user_id', $user->id)->where('comic_id', $comic->id)->first();
-            if($check){
+            if ($check) {
                 $follow = true;
             }
             $history = DB::table('histories')->where('user_id', $user->id)->where('comic_id', $comic->id)->first();
-            if($history){
+            if ($history) {
                 $history = explode(",", $history->chapterComics_id);
                 $comic->history = $history;
                 $conti = Chapter::where('id', end($history))->select('slug', 'name', 'updated_at')->first();
@@ -169,13 +171,13 @@ class HomeController extends Controller
 
     public function showReadComicPage($slug, $chapter)
     {
-        $comic = Cache::remember("comic.{$slug}", 3600, function () use(&$slug) {
+        $comic = Cache::remember("comic.{$slug}", 3600, function () use (&$slug) {
             return Comic::where('slug', $slug)->withCount('comments')->first();
         });
-        if(!$comic){
+        if (!$comic) {
             abort(404);
         }
-        $chapterSelected = Cache::remember("chapter.{$slug}.{$chapter}", 600, function () use(&$comic, &$chapter) {
+        $chapterSelected = Cache::remember("chapter.{$slug}.{$chapter}", 600, function () use (&$comic, &$chapter) {
             return Chapter::where('comic_id', $comic->id)
                 ->where('slug', $chapter)
                 ->where('server', '!=', '')
@@ -183,10 +185,10 @@ class HomeController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
         });
-        if(!$chapterSelected){
+        if (!$chapterSelected) {
             abort(404);
         }
-        $servers = Cache::remember("server.{$slug}.{$chapter}", 600, function () use(&$comic, &$chapterSelected) {
+        $servers = Cache::remember("server.{$slug}.{$chapter}", 600, function () use (&$comic, &$chapterSelected) {
             return Chapter::where('comic_id', $comic->id)
                 ->where('chapter_number', $chapterSelected->chapter_number)
                 ->where('server', '!=', '')
@@ -197,11 +199,11 @@ class HomeController extends Controller
         });
         $comic->prevChap = Chapter::where('comic_id', $comic->id)
             ->where('chapter_number', '<', $chapterSelected->chapter_number)
-            ->select('name','slug')
+            ->select('name', 'slug')
             ->orderByDesc('chapter_number')->first();
         $comic->nextChap = Chapter::where('comic_id', $comic->id)
             ->where('chapter_number', '>', $chapterSelected->chapter_number)
-            ->select('name','slug')
+            ->select('name', 'slug')
             ->orderBy('chapter_number')->first();
 
         $this->upView('comic', $comic->id);
@@ -230,10 +232,67 @@ class HomeController extends Controller
         return view("/users/read", compact('comic', 'chapterSelected', 'servers', 'comments', 'metaHtml'));
     }
 
+    public function showNewUpdate(Request $request)
+    {
+        $seo = DB::table('seo')->get();
+        $title = 'Truyện mới cập nhật - ' . env('APP_NAME');
+        SEOTools::setTitle($title);
+        SEOTools::setDescription("Danh sách truyện tranh comics, manga, manhua, manhwa mới cập nhật tại " . env('APP_NAME'));
+        SEOMeta::addKeyword("truyện mới cập nhật, truyện tranh mới");
+        SEOTools::opengraph()->addProperty('type', 'website');
+        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setUrl(url()->current());
+        SEOMeta::setCanonical(url()->current());
+        $metaHtml = $seo[6]->value;
+
+        $status = $request->input('status') ?? "all";
+        $sort = $request->input('sort') ?? "0";
+        $page = $request->input('page') ?? 1;
+
+        if ($status == 'all' && $sort == '0') {
+            $comics = Cache::remember('comicsUpdated_' . $page, 3600, function () {
+                return Comic::orderBy('updated_at', 'desc')->paginate(24);
+            });
+        } else {
+            $comics = Comic::withCount('votes', 'follows', 'comments', 'chapters')->with('chapters');
+            switch ($status) {
+                case '1':
+                    $comics->where('status', 'completed');
+                    break;
+                case '2':
+                    $comics->where('status', 'ongoing');
+                    break;
+            }
+            switch ($sort) {
+                case '1':
+                    $comics->orderByDesc('created_at');
+                    break;
+                case '2':
+                    $comics->orderByDesc('view_total');
+                    break;
+                case '3':
+                    $comics->orderByDesc('follows_count');
+                    break;
+                case '4':
+                    $comics->orderByDesc('comments_count');
+                    break;
+                case '5':
+                    $comics->orderByDesc('chapters_count');
+                    break;
+                default:
+                    $comics->orderByDesc('updated_at');
+                    break;
+            }
+            $comics = $comics->paginate(24);
+        }
+
+        return view("/users/new-updates", compact('comics', 'metaHtml'));
+    }
+
     public function searchComic(Request $request)
     {
         $query = $request->get('search');
-        if(!$query || $query == ""){
+        if (!$query || $query == "") {
             return response()->json([
                 'ok' => 1,
                 'list' => "<center>Không có kết quả phù hợp</center>"
@@ -241,16 +300,16 @@ class HomeController extends Controller
         }
         $comics = Comic::where('name', 'like', '%' . $query . '%')->orWhere('slug', 'like', '%' . $query . '%')->orWhere('origin_name', 'like', '%' . $query . '%')->limit(10)->get();
         $msg = "";
-        if(count($comics) == 0){
+        if (count($comics) == 0) {
             return response()->json([
                 'ok' => 1,
                 'list' => "<center>Không có kết quả phù hợp</center>"
             ]);
-        }else{
-            foreach($comics as $comic){
+        } else {
+            foreach ($comics as $comic) {
                 $msg .= "<div class='li_search'><a href='" . route('detail', $comic->slug) . "'>
                 <div class='img'><img src='" . $comic->thumbnail . "' alt='" . $comic->name . "'></div>
-                <div class='info'>".$comic->name."</div>
+                <div class='info'>" . $comic->name . "</div>
 
                 </a></div>";
             }
@@ -261,15 +320,16 @@ class HomeController extends Controller
         ]);
     }
 
-    public function vote(Request $request, $id){
-        if(!Auth::check()){
+    public function vote(Request $request, $id)
+    {
+        if (!Auth::check()) {
             return response()->json(['data' => false, 'status' => 401], 401);
         }
         $user = Auth::user();
         $check = DB::table('voting')->where('user_id', $user->id)->where('comic_id', $id)->first();
         $comic = Comic::find($id);
 
-        if($check){
+        if ($check) {
             DB::table('voting')->where('user_id', $user->id)->where('comic_id', $id)->update([
                 'vote' => $request->vote,
             ]);
@@ -291,17 +351,21 @@ class HomeController extends Controller
         return response()->json(['data' => true, 'status' => 200], 200);
     }
 
-    public function follow(Request $request, $id){
-        if(!Auth::check()){
+    public function follow(Request $request, $id)
+    {
+        if (!Auth::check()) {
             return response()->json(['data' => false, 'status' => 401], 401);
         }
         $user = Auth::user();
         $check = DB::table('follows')->where('user_id', $user->id)->where('comic_id', $id)->first();
-        if($check){
+        if ($check) {
             DB::table('follows')->where('user_id', $user->id)->where('comic_id', $id)->delete();
-            return response()->json(['data' => [
-                'isFollowing' => false,
-            ], 'status' => 200], 200);
+            return response()->json([
+                'data' => [
+                    'isFollowing' => false,
+                ],
+                'status' => 200
+            ], 200);
         }
         DB::table('follows')->insert([
             'user_id' => $user->id,
@@ -309,13 +373,17 @@ class HomeController extends Controller
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        return response()->json(['data' => [
-            'isFollowing' => true,
-        ], 'status' => 200], 200);
+        return response()->json([
+            'data' => [
+                'isFollowing' => true,
+            ],
+            'status' => 200
+        ], 200);
     }
 
-    public function comments(Request $request){
-        if(!Auth::check()){
+    public function comments(Request $request)
+    {
+        if (!Auth::check()) {
             return response()->json(['data' => null, 'status' => 401], 401);
         }
         $user = Auth::user();
@@ -338,8 +406,9 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function reply(Request $request, $id){
-        if(!Auth::check()){
+    public function reply(Request $request, $id)
+    {
+        if (!Auth::check()) {
             return response()->json(['data' => null, 'status' => 401], 401);
         }
         $user = Auth::user();
@@ -360,16 +429,17 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function getComments(Request $request){
+    public function getComments(Request $request)
+    {
         $mangaId = $request->mangaId;
         $chapterId = $request->chapterId ?? null;
         $page = $request->page ?? 1;
         $pageSize = $request->pageSize ?? 10;
         $orderBy = $request->orderBy ?? 'created_at';
 
-        if($chapterId){
+        if ($chapterId) {
             $data = Comment::where('comic_id', $mangaId)->where('chapter_id', $chapterId)->orderBy('created_at', 'desc')->paginate($pageSize);
-        }else{
+        } else {
             $data = Comment::where('comic_id', $mangaId)->orderBy('created_at', 'desc')->paginate($pageSize);
         }
 
@@ -380,8 +450,9 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function like($id){
-        if(!Auth::check()){
+    public function like($id)
+    {
+        if (!Auth::check()) {
             return response()->json(['data' => null, 'status' => 401], 401);
         }
         $comment = Comment::find($id);
@@ -412,14 +483,14 @@ class HomeController extends Controller
         } else {
             $comic->view_day += 1;
         }
-        if($firstDayOfWeek->isToday()){
+        if ($firstDayOfWeek->isToday()) {
             $comic->view_week = 1;
-        }else{
+        } else {
             $comic->view_week += 1;
         }
-        if($firstDayOfMonth->isToday()){
+        if ($firstDayOfMonth->isToday()) {
             $comic->view_month = 1;
-        }else{
+        } else {
             $comic->view_month += 1;
         }
         $comic->upview_at = now();
@@ -430,7 +501,7 @@ class HomeController extends Controller
 
     public function upExp(Request $request)
     {
-        if(!$request->id){
+        if (!$request->id) {
             return;
         }
 
@@ -439,8 +510,9 @@ class HomeController extends Controller
         $user->save();
     }
 
-    public function showProfile(){
-        if(!Auth::check()){
+    public function showProfile()
+    {
+        if (!Auth::check()) {
             return redirect()->route('home');
         }
         $user = Auth::user();
@@ -448,17 +520,18 @@ class HomeController extends Controller
         return view("/users/profile", compact('user'));
     }
 
-    public function updateProfile(Request $request){
-        if(!Auth::check()){
+    public function updateProfile(Request $request)
+    {
+        if (!Auth::check()) {
             return redirect()->route('home');
         }
         $user = Auth::user();
         $user->name = $request->name;
-        if($request->hasFile('avatar')){
+        if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
             $fileName = time() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads'), $fileName);
-            $user->avatar = '/uploads/'.$fileName;
+            $user->avatar = '/uploads/' . $fileName;
         }
         $user->save();
         return response()->json([
@@ -466,12 +539,13 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function updatePassword(Request $request){
+    public function updatePassword(Request $request)
+    {
         $newPass = $request->new_password;
         $oldPass = $request->old_password;
         $confirmPass = $request->new_password_confirm;
 
-        if($newPass != $confirmPass){
+        if ($newPass != $confirmPass) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Mật khẩu xác nhận không khớp.'
@@ -480,7 +554,7 @@ class HomeController extends Controller
 
         $user = Auth::user();
 
-        if(!password_verify($oldPass, $user->password)){
+        if (!password_verify($oldPass, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Mật khẩu cũ không đúng.'
@@ -495,7 +569,8 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function showCategory(Request $request){
+    public function showCategory(Request $request)
+    {
         $seo = DB::table('seo')->get();
         $title = 'Kho tổng hợp truyện tranh miễn phí, cập nhật truyện full mới nhất - ' . env('APP_NAME');
         SEOTools::setTitle($title);
@@ -515,11 +590,12 @@ class HomeController extends Controller
         return view("/users/category-list", compact('categories', 'metaHtml'));
     }
 
-    public function showCategoryBySlug($slug, Request $request){
+    public function showCategoryBySlug($slug, Request $request)
+    {
         $status = $request->input('status') ?? "all";
         $sort = $request->input('sort') ?? "0";
         $category = Category::where('slug', $slug)->first();
-        if(!$category){
+        if (!$category) {
             abort(404);
         }
         $replacements = [
@@ -542,7 +618,7 @@ class HomeController extends Controller
 
         $queryStatus = $request->query('status');
         $querySort = $request->query('sort');
-        $comics = Comic::whereHas('categories', function($query) use ($slug){
+        $comics = Comic::whereHas('categories', function ($query) use ($slug) {
             $query->where('slug', $slug);
         })->withCount('votes', 'follows', 'comments', 'chapters')->with('chapters');
         if ($queryStatus) {
@@ -580,10 +656,11 @@ class HomeController extends Controller
         return view("/users/category", compact('comics', 'category', 'metaHtml'));
     }
 
-    public function showAuthor($slug, Request $request){
+    public function showAuthor($slug, Request $request)
+    {
         $status = $request->input('status') ?? "all";
         $author = Author::where('slug', $slug)->first();
-        if(!$author){
+        if (!$author) {
             abort(404);
         }
         $replacements = [
@@ -607,9 +684,9 @@ class HomeController extends Controller
             $query->where('id_author', $author->id);
         });
 
-        if($status == "1"){
+        if ($status == "1") {
             $comics = $comics->where('status', 'ongoing');
-        }else if ($status == "2"){
+        } else if ($status == "2") {
             $comics = $comics->where('status', 'completed');
         }
 
@@ -617,7 +694,8 @@ class HomeController extends Controller
         return view("/users/author", compact('comics', 'author'));
     }
 
-    public function showSearch(Request $request){
+    public function showSearch(Request $request)
+    {
         $querySort = $request->query('orderBy');
         $queryName = $request->query('keyword');
         $queryCategory = $request->query('genreIds');
@@ -666,51 +744,54 @@ class HomeController extends Controller
         return view("users.advancedFilter", compact('comics', 'categories'));
     }
 
-    public function showFollow(){
+    public function showFollow()
+    {
         $comics = [];
-        if(Auth::check()){
+        if (Auth::check()) {
             $user = Auth::user();
             $comics = Comic::whereHas('follows', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->withCount('follows')
-            ->paginate(20);
-        }else{
+                ->withCount('follows')
+                ->paginate(20);
+        } else {
             return redirect()->route('home');
         }
         return view("users.followPage", compact('comics', 'user'));
     }
 
-    public function showHistory(){
+    public function showHistory()
+    {
         $comics = [];
-        if(Auth::check()){
+        if (Auth::check()) {
             $user = Auth::user();
             $comics = Comic::whereHas('histories', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->orderByDesc(
-                History::select('updated_at')
-                    ->whereColumn('histories.comic_id', 'comics.id')
-                    ->latest('updated_at')
-                    ->take(1)
-            )
-            ->withCount('follows')
-            ->paginate(20);
-            foreach($comics as $comic){
+                ->orderByDesc(
+                    History::select('updated_at')
+                        ->whereColumn('histories.comic_id', 'comics.id')
+                        ->latest('updated_at')
+                        ->take(1)
+                )
+                ->withCount('follows')
+                ->paginate(20);
+            foreach ($comics as $comic) {
                 $history = DB::table('histories')->where('user_id', $user->id)->where('comic_id', $comic->id)->first();
                 $history = explode(",", $history->chapterComics_id);
                 $comic->history = $history;
                 $conti = DB::table('chapters')->where('id', end($history))->first();
                 $comic->conti = $conti ?? null;
             }
-        }else{
+        } else {
             return redirect()->route('home');
         }
         return view("users.historyPage", compact('comics', 'user'));
     }
 
-    public function showComment(){
-        if(!Auth::check()){
+    public function showComment()
+    {
+        if (!Auth::check()) {
             return redirect()->route('home');
         }
         $user = Auth::user();
@@ -718,7 +799,8 @@ class HomeController extends Controller
         return view("/users/commentPage", compact('comments', 'user'));
     }
 
-    public function changeServer(Request $request){
+    public function changeServer(Request $request)
+    {
         $id = $request->id;
         $images = DB::table('chapterimgs')->where('chapter_id', $id)->orderBy('page')->get();
         return response()->json([
@@ -726,24 +808,25 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function saveHistory($table, $id, $chap){
-        if($table == "story"){
+    public function saveHistory($table, $id, $chap)
+    {
+        if ($table == "story") {
             $col = "story_id";
-        }else{
+        } else {
             $col = "comic_id";
         }
-        if(Auth::check()){
+        if (Auth::check()) {
             $user = Auth::user();
             $check = DB::table('histories')->where('user_id', $user->id)->where($col, $id)->first();
-            if($check){
-                $chaptersWatched =  explode(",", $check->chapterComics_id);
-                if(!in_array($chap, $chaptersWatched)){
+            if ($check) {
+                $chaptersWatched = explode(",", $check->chapterComics_id);
+                if (!in_array($chap, $chaptersWatched)) {
                     $chaptersWatched[] = $chap;
                     DB::table('histories')->where('user_id', $user->id)->where($col, $id)->update([
                         'chapterComics_id' => implode(",", $chaptersWatched),
                         'updated_at' => now()
                     ]);
-                }else{
+                } else {
                     $key = array_search($chap, $chaptersWatched);
                     unset($chaptersWatched[$key]);
                     array_push($chaptersWatched, $chap);
@@ -752,7 +835,7 @@ class HomeController extends Controller
                         'updated_at' => now()
                     ]);
                 }
-            }else{
+            } else {
                 DB::table('histories')->insert([
                     $col => $id,
                     'user_id' => $user->id,
@@ -764,9 +847,10 @@ class HomeController extends Controller
         }
     }
 
-    public function removeHistory(Request $request){
+    public function removeHistory(Request $request)
+    {
         $id = $request->id;
-        if(Auth::check()){
+        if (Auth::check()) {
             $user = Auth::user();
             History::where('comic_id', $id)->where('user_id', $user->id)->delete();
         }
@@ -775,7 +859,8 @@ class HomeController extends Controller
         ], 200);
     }
 
-    public function reportChapter(Request $request){
+    public function reportChapter(Request $request)
+    {
         $id = $request->id;
         DB::table('chapters')->where('id', $id)->update([
             'has_report' => DB::raw('has_report + 1')
@@ -793,26 +878,28 @@ class HomeController extends Controller
         ], 200)->withCookie($cookie);
     }
 
-    public function random(){
+    public function random()
+    {
         $comic = Comic::inRandomOrder()->first();
         return redirect()->route('detail', ['slug' => $comic->slug]);
     }
 
-    public function hot(Request $request){
+    public function hot(Request $request)
+    {
         $type = $request->input('type') ?? "all";
 
-        if($type == "all"){
+        if ($type == "all") {
             $comics = Comic::orderByDesc('view_total')->limit(12)->get();
-        }else if($type == "day"){
+        } else if ($type == "day") {
             $comics = Comic::orderByDesc('view_day')->limit(12)->get();
-        }else if($type == "week"){
+        } else if ($type == "week") {
             $comics = Comic::orderByDesc('view_week')->limit(12)->get();
-        }else if($type == "month"){
+        } else if ($type == "month") {
             $comics = Comic::orderByDesc('view_month')->limit(12)->get();
         }
 
         $seo = DB::table('seo')->get();
-        $title =  env('APP_NAME') . ' tranh hot trending đang được xem nhiều nhất | ' . env('APP_NAME');
+        $title = env('APP_NAME') . ' tranh hot trending đang được xem nhiều nhất | ' . env('APP_NAME');
         SEOTools::setTitle($title);
         $description = env('APP_NAME') . ' cập nhật truyện hot mới nhất trên thị trường. Đọc truyện tranh online đang top trending cập nhật mới nhất tại ' . env('APP_NAME');
         SEOTools::setDescription($description);
@@ -828,7 +915,8 @@ class HomeController extends Controller
         return view("users.hot", compact('comics', 'type', 'metaHtml'));
     }
 
-    public function showNews(){
+    public function showNews()
+    {
         $seo = DB::table('seo')->get();
         $title = 'Tin tức truyện tranh mới nhất';
         SEOTools::setTitle($title);
@@ -862,9 +950,10 @@ class HomeController extends Controller
         return view("users.news", compact('blogs', 'metaHtml', 'blogsHot', 'comicsDaily', 'comicsWeekly', 'comicsMonthly', 'comicsNew'));
     }
 
-    public function showBlog($slug){
+    public function showBlog($slug)
+    {
         $blog = Blog::where('slug', $slug)->first();
-        if(!$blog){
+        if (!$blog) {
             abort(404);
         }
 
