@@ -1,0 +1,63 @@
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Đăng Nhập - {{env('APP_NAME')}}</title>
+    <meta name="robots" content="nofollow, noindex">
+    <link rel="stylesheet" href="{{ asset('assets/css/global.css')}}">
+</head>
+<body>
+    <div class="max-w-screen-2xl py-5 px-2 md:px-10 min-h-screen md:mx-[60px]">
+        <div class="grid h-full lg:grid-cols-2">
+            <div class="relative z-20">
+                <a href="{{route('home')}}" class="items-center hidden p-4 text-sm border rounded-full border-border-gray text-lightgray lg:inline-flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10" fill="none" class="mr-2.5">
+                       <path d="M1.66602 5L12.3327 5" stroke="#8991A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                       <path d="M4.99932 8.33341C4.99932 8.33341 1.66602 5.87845 1.66602 5.00006C1.66601 4.12166 4.99935 1.66675 4.99935 1.66675" stroke="#8991A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Quay lại trang chủ
+                </a>
+                <div class="max-w-sm mx-auto mt-4 md:mt-24 lg:mt-12">
+                    <img src="/logo.png" alt="" class="mx-auto mb-5 lg:h-12 h-14 lg:mx-0">
+                    <h1 class="text-2xl font-bold text-center sm:text-3xl gradient-text-gray lg:text-start">Đăng nhập để tiếp tục đọc truyện tranh yêu thích của bạn.!</h1>
+                    <p class="mt-4 mb-6 text-sm text-center text-lightgray lg:text-start">Bạn chưa có tài khoản? <a href="{{route('register')}}" class="font-medium gradient-text-primary">Đăng ký ngay!</a></p>
+                    @if (session('error'))
+                    <div class="p-2 my-4 text-center border rounded-full bg-background-detail">{{session('error')}}</div>
+                    @endif
+                    <form action="{{route('auth-login')}}" method="POST">
+                        @csrf
+                        <div class="rounded-full border bg-background border-border-gray has-[:focus]:border-primary transition-all flex items-center flex-row-reverse pl-4 gap-2">
+                            <input name="email" class="w-full p-4 pl-2 bg-transparent rounded-r-full outline-none placeholder:text-lightgray peer" type="email" placeholder="Nhập email..." value="{{old('email')}}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" class="transition-all peer-focus:grayscale-0 grayscale"><g><path fill-rule="evenodd" clip-rule="evenodd" d="M9.99932 0C9.28989 0 8.64925 0.220996 7.95516 0.593065C7.2838 0.952951 6.5108 1.48382 5.54301 2.14846L1.89906 4.65083C1.50224 4.92265 1.15478 5.16067 0.875 5.43304C1.27869 5.45188 1.67597 5.59313 2.01446 5.85174L5.89698 8.81804C6.16205 9.02055 6.37205 9.18037 6.56536 9.31554C6.72862 9.42971 6.86449 9.57671 6.96711 9.74517C7.8956 9.1876 8.88869 8.78049 9.9997 8.78049C11.1104 8.78049 12.1032 9.18736 13.0314 9.74466C13.134 9.57644 13.2698 9.42964 13.4329 9.31561C13.6262 9.18043 13.8362 9.02059 14.1013 8.81804L17.9838 5.85174C18.3224 5.59306 18.7198 5.45181 19.1236 5.43303C18.8438 5.16066 18.4964 4.92265 18.0996 4.65083L14.4556 2.14847L14.4556 2.14846C13.4879 1.48384 12.7148 0.952945 12.0435 0.593066C11.3494 0.220996 10.7088 0 9.99932 0ZM0.481514 6.96586C0.25016 7.0821 0.0982912 7.32212 0.0860532 7.59085L0.0625902 8.10612C0.000470279 9.58657 -0.0154219 11.0382 0.0149679 12.5043L0.0172318 12.6137C0.0324059 13.3482 0.0461393 14.0129 0.0788884 14.615L5.79216 10.5329C5.57038 10.3778 5.33638 10.1994 5.07625 10.0006L1.19372 7.03434C0.986379 6.87592 0.712867 6.84963 0.481514 6.96586ZM19.5185 6.96586C19.7498 7.0821 19.9017 7.32212 19.9139 7.59085L19.9374 8.10612C19.9995 9.58657 20.0154 11.0382 19.985 12.5043L19.9828 12.6137C19.9676 13.3482 19.9539 14.013 19.9211 14.6151L14.2077 10.533C14.4295 10.3779 14.6636 10.1994 14.9238 10.0006L18.8063 7.03434C19.0136 6.87592 19.2871 6.84963 19.5185 6.96586ZM9.99899 10.244C11.0736 10.244 12.074 10.7802 13.2634 11.63L19.3415 15.9727C19.5924 16.152 19.704 16.481 19.6174 16.7862C19.4249 17.4645 19.1184 18.0381 18.6337 18.5429C17.9757 19.228 17.1977 19.5593 16.2412 19.732C15.3269 19.8971 14.1859 19.9267 12.7668 19.9634L12.7132 19.9648C10.8984 20.0119 9.09958 20.0119 7.28475 19.9648L7.23113 19.9634C5.81209 19.9267 4.67105 19.8971 3.75675 19.732C2.80032 19.5593 2.02231 19.228 1.3643 18.5429C0.879583 18.0381 0.573101 17.4645 0.380604 16.7862C0.293983 16.481 0.405538 16.152 0.656482 15.9727L6.73459 11.63C7.92394 10.7802 8.92434 10.244 9.99899 10.244Z" fill="url(#paint0_linear_14137_3570)"></path></g><defs><linearGradient id="paint0_linear_14137_3570" x1="10.0006" y1="0.000208499" x2="10.0006" y2="20.0016" gradientUnits="userSpaceOnUse"><stop stop-color="#EFB78F"></stop><stop offset="1" stop-color="#E99B63"></stop></linearGradient></defs></svg>
+                        </div>
+                        <div class="mt-4 rounded-full border bg-background border-border-gray has-[:focus]:border-primary transition-all flex items-center flex-row-reverse pl-4 gap-2">
+                            <input name="password" class="w-full p-4 pl-2 bg-transparent rounded-r-full outline-none placeholder:text-lightgray peer" type="password" placeholder="Your password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" class="transition-all peer-focus:grayscale-0 grayscale"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.33333 1.70829C5.7225 1.70829 4.41667 3.01413 4.41667 4.62496V6.70829C4.41667 7.16853 4.04357 7.54163 3.58333 7.54163C3.1231 7.54163 2.75 7.16853 2.75 6.70829V4.62496C2.75 2.09365 4.80203 0.041626 7.33333 0.041626C9.86464 0.041626 11.9167 2.09365 11.9167 4.62496V6.70829C11.9167 7.16853 11.5436 7.54163 11.0833 7.54163C10.6231 7.54163 10.25 7.16853 10.25 6.70829V4.62496C10.25 3.01413 8.94416 1.70829 7.33333 1.70829Z" fill="url(#paint0_linear_14137_1734)"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M14.7479 12.7647C14.5748 12.5954 14.4883 12.5107 14.4899 12.4033C14.4915 12.2959 14.5787 12.2157 14.7531 12.0551C14.7996 12.0123 14.8443 11.9718 14.8865 11.934C15.0136 11.8204 15.0772 11.7635 15.1725 11.7635C15.2679 11.7634 15.3312 11.8198 15.4579 11.9328C15.5849 12.0459 15.7358 12.1871 15.9044 12.3519L16.559 12.9922C16.8834 13.3094 17.4044 13.3047 17.7229 12.9816C18.0414 12.6586 18.0366 12.1395 17.7123 11.8223L17.0576 11.182C16.7777 10.9081 16.4791 10.616 16.2322 10.4317C15.9559 10.2256 15.6112 10.0416 15.1717 10.0416C14.7322 10.0416 14.3875 10.2256 14.1112 10.4317C13.8643 10.616 13.5987 10.8758 13.3188 11.1497L11.696 12.7368C11.5779 12.8523 11.5189 12.91 11.4495 12.9255C11.38 12.941 11.2902 12.9098 11.1107 12.8473C10.1715 12.5204 9.08381 12.7253 8.33072 13.4619C7.27908 14.4905 7.27908 16.1644 8.33072 17.193C9.37397 18.2134 11.0593 18.2134 12.1025 17.193C12.8524 16.4596 13.0676 15.3981 12.7481 14.4764C12.6863 14.298 12.6553 14.2087 12.6699 14.1406C12.6707 14.1367 12.6713 14.1341 12.6723 14.1302C12.6898 14.0627 12.7481 14.0057 12.8647 13.8916C13.0234 13.7364 13.1028 13.6588 13.2004 13.656C13.2053 13.6558 13.2102 13.6558 13.215 13.656C13.3127 13.6588 13.392 13.7364 13.5507 13.8917L13.9404 14.2728C14.2648 14.59 14.7858 14.5853 15.1043 14.2622C15.4228 13.9391 15.418 13.4201 15.0937 13.1029L14.7479 12.7647ZM9.48395 14.6318C9.88691 14.2377 10.5464 14.2377 10.9493 14.6318C11.3439 15.0178 11.3439 15.6371 10.9493 16.0231C10.5464 16.4172 9.88691 16.4172 9.48395 16.0231C9.08937 15.6371 9.08937 15.0178 9.48395 14.6318Z" fill="url(#paint1_linear_14137_1734)"></path><path d="M7.33366 5.875C6.0038 5.875 4.79503 5.90351 3.60467 5.95824C1.88962 6.03708 0.497065 7.36514 0.270757 9.04598C0.147294 9.96297 0.0419922 10.9265 0.0419922 11.9167C0.0419922 12.9068 0.147295 13.8704 0.270757 14.7874C0.497065 16.4682 1.88963 17.7963 3.60467 17.8751C4.36971 17.9103 5.14235 17.9346 5.94985 17.9475C6.49861 17.9563 6.773 17.9607 6.864 17.8267C6.95501 17.6927 6.83196 17.3964 6.58588 16.8038C5.99992 15.3928 6.29019 13.7092 7.45669 12.5683C8.37304 11.672 9.62024 11.3161 10.7977 11.4894C10.9697 11.5147 11.0556 11.5274 11.1225 11.5057C11.1893 11.484 11.245 11.4295 11.3563 11.3207L12.4758 10.2258C12.7316 9.97535 13.0485 9.66511 13.3637 9.42994C13.5066 9.32325 13.6791 9.20853 13.8806 9.10618C14.1367 8.97612 14.2648 8.9111 14.3071 8.80797C14.3494 8.70484 14.3144 8.60014 14.2446 8.39074C13.7908 7.03131 12.5476 6.02651 11.0626 5.95824C9.87229 5.90351 8.66352 5.875 7.33366 5.875Z" fill="url(#paint2_linear_14137_1734)"></path><path d="M14.1341 15.7313C14.136 15.727 14.1334 15.7222 14.1289 15.7213V15.7213C14.1247 15.7205 14.1208 15.7234 14.1203 15.7277V15.7277C14.1195 15.7359 14.1309 15.7389 14.1341 15.7313V15.7313Z" fill="url(#paint3_linear_14137_1734)"></path><defs><linearGradient id="paint0_linear_14137_1734" x1="7.33333" y1="0.041626" x2="7.33333" y2="7.54163" gradientUnits="userSpaceOnUse"><stop stop-color="#EFB78F"></stop><stop offset="1" stop-color="#E99B63"></stop></linearGradient><linearGradient id="paint1_linear_14137_1734" x1="12.7503" y1="10.0416" x2="12.7503" y2="17.9583" gradientUnits="userSpaceOnUse"><stop stop-color="#EFB78F"></stop><stop offset="1" stop-color="#E99B63"></stop></linearGradient><linearGradient id="paint2_linear_14137_1734" x1="7.20859" y1="5.875" x2="7.20859" y2="17.9583" gradientUnits="userSpaceOnUse"><stop stop-color="#EFB78F"></stop><stop offset="1" stop-color="#E99B63"></stop></linearGradient><linearGradient id="paint3_linear_14137_1734" x1="7.20859" y1="5.875" x2="7.20859" y2="17.9583" gradientUnits="userSpaceOnUse"><stop stop-color="#EFB78F"></stop><stop offset="1" stop-color="#E99B63"></stop></linearGradient></defs></svg>
+                        </div>
+                        <button type="submit" class="w-full p-5 mt-6 text-sm font-medium rounded-full gradient-background-primary text-background">Đăng Nhập</button>
+                    </form>
+                    <p class="text-center">Đăng nhập bằng mạng xã hội</p>
+                    <div class="flex justify-center mt-3 gap-2">
+                        <a href="{{route('loginGoogle')}}" class="border border-primary border-solid p-2 block w-fit h-fit" style="border-radius: 100%">
+                            <img class="w-8 h-8" src="/assets/images/google.png" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute top-0 right-0 flex items-center justify-center w-full h-full overflow-hidden lg:w-1/2">
+                <div class="bg-gradient-to-t from-background-detail from-10% to-background-detail/15 z-10 w-full right-0 top-0 h-full absolute"></div>
+                <img src="/assets/images/login_background.png" class="absolute top-0 left-0 z-0 object-cover w-full h-full blur-xl" alt="">
+                <img src="/assets/images/login_image.png" class="absolute z-0 hidden -translate-x-1/2 w-80 left-1/2 top-40 lg:block" alt="">
+                <div class="z-20 relative h-[350px] lg:block hidden">
+                    <div class="absolute flex flex-col items-center -translate-x-1/2 -translate-y-4 top-full w-80 left-1/2">
+                        <p class="mb-4 text-3xl font-semibold font-haffer"> {{env('APP_NAME')}} </p>
+                        <p class="mb-6 text-sm text-center gradient-text-gray">Hãy tham gia ngay {{env('APP_NAME')}} để đọc thêm nhiều truyện hay, cập nhật sớm nhất và miễn phí.</p>
+                        <a href="{{route('showSearch')}}" class="p-4 text-sm font-medium border rounded-full border-border-gray bg-active-background">Xem tất cả truyện</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

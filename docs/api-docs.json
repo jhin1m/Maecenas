@@ -1,0 +1,4659 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "MyManga VN API",
+        "description": "Vietnamese manga reading platform API - Provides access to manga library, chapters, user management, comments, and social features.",
+        "contact": {
+            "name": "MyManga VN Support",
+            "email": "support@mymanga.vn"
+        },
+        "license": {
+            "name": "MIT License",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Local Development Server"
+        },
+        {
+            "url": "https://api.mymanga.vn",
+            "description": "Production Server"
+        }
+    ],
+    "paths": {
+        "/api/v1/artists": {
+            "get": {
+                "tags": [
+                    "Artists"
+                ],
+                "summary": "List all artists",
+                "description": "Get all artists",
+                "operationId": "artistIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Artists retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ArtistListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/artists/{slug}": {
+            "get": {
+                "tags": [
+                    "Artists"
+                ],
+                "summary": "Get artist details",
+                "description": "Get specific artist by slug",
+                "operationId": "artistShow",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Artist retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ArtistDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/artists/{slug}/mangas": {
+            "get": {
+                "tags": [
+                    "Artists"
+                ],
+                "summary": "Get mangas by artist",
+                "description": "Get mangas for a specific artist",
+                "operationId": "artistMangas",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "-updated_at"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mangas retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User login",
+                "description": "Authenticate user with email and password, returns user data and Bearer token",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User registration",
+                "description": "Create new user account with email, password, and receive Bearer token",
+                "operationId": "authRegister",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (e.g., email already exists)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/profile": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get authenticated user profile",
+                "description": "Retrieve profile data for currently authenticated user (requires Bearer token)",
+                "operationId": "authGetProfile",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile retrieved successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (token missing or invalid)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Update authenticated user profile",
+                "description": "Update name, email, password, or avatar for authenticated user (requires Bearer token)",
+                "operationId": "authUpdateProfile",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profile updated successfully"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User logout",
+                "description": "Revoke current access token (requires Bearer token)",
+                "operationId": "authLogout",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logout successful"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/google": {
+            "post": {
+                "tags": [
+                    "Social"
+                ],
+                "summary": "Google OAuth login/register",
+                "description": "Authenticate or register user with Google OAuth access token",
+                "operationId": "socialGoogleAuth",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GoogleAuthRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Google authentication successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Google authentication failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid Google access token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Email already exists (explicit account linking required)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{manga_slug}/chapters/{chapter_slug}": {
+            "get": {
+                "tags": [
+                    "Chapters"
+                ],
+                "summary": "Get chapter details",
+                "description": "Get detailed information for a specific chapter including navigation to prev/next chapters",
+                "operationId": "chapterShow",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "description": "Manga slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "one-piece"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "description": "Chapter slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "chapter-1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chapter retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChapterDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chapter not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{manga_slug}/chapters/{chapter_slug}/images": {
+            "get": {
+                "tags": [
+                    "Chapters"
+                ],
+                "summary": "Get chapter images for reading",
+                "description": "Get all images for a chapter. Also tracks reading history for authenticated users.",
+                "operationId": "chapterImages",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "description": "Manga slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "one-piece"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "description": "Chapter slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "chapter-1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chapter images retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChapterImagesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chapter not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{manga_slug}/chapters/{chapter_slug}/views": {
+            "post": {
+                "tags": [
+                    "Chapters"
+                ],
+                "summary": "Increment view count",
+                "description": "Increment view counters for chapter and manga (total, daily, weekly)",
+                "operationId": "chapterUpdateViews",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "description": "Manga slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "one-piece"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "description": "Chapter slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "chapter-1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Views updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Views updated successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "views": {
+                                                    "type": "integer",
+                                                    "example": 1001
+                                                },
+                                                "manga_views": {
+                                                    "type": "integer",
+                                                    "example": 50001
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chapter not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update views",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/chapter-reports/types": {
+            "get": {
+                "tags": [
+                    "Chapter Reports"
+                ],
+                "summary": "Get report types",
+                "description": "Get all available report types",
+                "operationId": "reportTypes",
+                "responses": {
+                    "200": {
+                        "description": "Report types retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ReportTypesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{manga_slug}/chapters/{chapter_slug}/reports": {
+            "post": {
+                "tags": [
+                    "Chapter Reports"
+                ],
+                "summary": "Submit chapter report",
+                "description": "Submit a report for a chapter",
+                "operationId": "submitChapterReport",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateChapterReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Report submitted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChapterReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Already reported",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/chapter-reports": {
+            "get": {
+                "tags": [
+                    "Chapter Reports"
+                ],
+                "summary": "Get user's reports",
+                "description": "Get authenticated user's chapter reports",
+                "operationId": "userChapterReports",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reports retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChapterReportListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/mangas/{manga_slug}/chapters/{chapter_slug}/comments": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get chapter comments",
+                "description": "Get comments for a specific chapter",
+                "operationId": "chapterComments",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "desc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comments retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Create chapter comment",
+                "description": "Store a new comment for a chapter",
+                "operationId": "storeChapterComment",
+                "parameters": [
+                    {
+                        "name": "manga_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "chapter_slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCommentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comment created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comments/{id}": {
+            "put": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Update comment",
+                "description": "Update a comment",
+                "operationId": "updateComment",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCommentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Comment updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Delete comment",
+                "description": "Delete a comment",
+                "operationId": "deleteComment",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/mangas/{slug}/comments": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get manga comments",
+                "description": "Get comments for a specific manga (includes manga comments and all chapter comments)",
+                "operationId": "mangaComments",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "desc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "all",
+                            "enum": [
+                                "all",
+                                "manga",
+                                "chapter"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comments retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Create manga comment",
+                "description": "Store a new comment for a manga",
+                "operationId": "storeMangaComment",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCommentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comment created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/comments/recent": {
+            "get": {
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Get recent comments",
+                "description": "Get recent comments across the entire system\nCached for performance",
+                "operationId": "recentComments",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "desc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comments retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommentListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/doujinshi": {
+            "get": {
+                "tags": [
+                    "Doujinshi"
+                ],
+                "summary": "List all doujinshi categories",
+                "description": "Get all doujinshis",
+                "operationId": "doujinshiIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doujinshis retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DoujinshiListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/doujinshi/{slug}": {
+            "get": {
+                "tags": [
+                    "Doujinshi"
+                ],
+                "summary": "Get doujinshi details",
+                "description": "Get specific doujinshi by slug",
+                "operationId": "doujinshiShow",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doujinshi retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DoujinshiDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/doujinshi/{slug}/mangas": {
+            "get": {
+                "tags": [
+                    "Doujinshi"
+                ],
+                "summary": "Get mangas by doujinshi",
+                "description": "Get mangas for a specific doujinshi",
+                "operationId": "doujinshiMangas",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "-updated_at"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mangas retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/genres": {
+            "get": {
+                "tags": [
+                    "Genres"
+                ],
+                "summary": "List all genres",
+                "description": "Get paginated list of genres with manga count",
+                "operationId": "genreIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Genres retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/genres/{slug}": {
+            "get": {
+                "tags": [
+                    "Genres"
+                ],
+                "summary": "Get genre details",
+                "description": "Get specific genre by slug",
+                "operationId": "genreShow",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Genre retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Genre not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/genres/{slug}/mangas": {
+            "get": {
+                "tags": [
+                    "Genres"
+                ],
+                "summary": "Get mangas by genre",
+                "description": "Get paginated mangas filtered by genre with sorting options",
+                "operationId": "genreMangas",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "newest|views|rating|name",
+                        "schema": {
+                            "type": "string",
+                            "default": "-updated_at"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mangas retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Genre not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups": {
+            "get": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "List all translation groups",
+                "description": "Get all groups",
+                "operationId": "groupIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Groups retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GroupListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups/{slug}": {
+            "get": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Get group details",
+                "description": "Get specific group by slug",
+                "operationId": "groupShow",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Group retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GroupDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/groups/{slug}/mangas": {
+            "get": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Get mangas by group",
+                "description": "Get mangas for a specific group",
+                "operationId": "groupMangas",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "-updated_at"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mangas retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "List all mangas",
+                "description": "Get paginated list of reviewed mangas with optional filtering",
+                "operationId": "mangaIndex",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 20)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mangas retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/recent": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Recent manga updates",
+                "description": "Get mangas sorted by most recent update time, optionally filtered by genre",
+                "operationId": "mangaRecent",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "genre_id",
+                        "in": "query",
+                        "description": "Filter by genre ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recent mangas retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/hot": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Hot/trending mangas",
+                "description": "Get mangas sorted by weekly views (trending)",
+                "operationId": "mangaHot",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hot mangas retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/search": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Search mangas",
+                "description": "Search mangas by name or alternative name",
+                "operationId": "mangaSearch",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search query (minimum 2 characters)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (query too short)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{slug}": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Get manga details",
+                "description": "Get detailed information for a specific manga including relationships (genres, artist, group, chapters)",
+                "operationId": "mangaShow",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Manga slug (URL-friendly identifier)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "one-piece"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manga retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{slug}/chapters": {
+            "get": {
+                "tags": [
+                    "Manga"
+                ],
+                "summary": "Get manga chapters",
+                "description": "Get paginated list of chapters for a specific manga with sorting options",
+                "operationId": "mangaChapters",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Manga slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "one-piece"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50,
+                            "maximum": 2000,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order (asc = oldest first, desc = newest first)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "asc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chapters retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChapterListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/mangas/{slug}/rating": {
+            "post": {
+                "tags": [
+                    "Ratings"
+                ],
+                "summary": "Rate a manga",
+                "description": "Store or update a rating for a manga",
+                "operationId": "storeMangaRating",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RatingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rating saved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RatingResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stickers": {
+            "get": {
+                "tags": [
+                    "Stickers"
+                ],
+                "summary": "Get all sticker sets",
+                "description": "Display a listing of all active sticker sets with their stickers.",
+                "operationId": "stickerSets",
+                "responses": {
+                    "200": {
+                        "description": "Sticker sets retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StickerSetsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/stickers/{id}": {
+            "get": {
+                "tags": [
+                    "Stickers"
+                ],
+                "summary": "Get sticker set by ID",
+                "description": "Display the stickers of a specific sticker set.",
+                "operationId": "stickerSet",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sticker set retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StickerSetResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sticker set not found or inactive"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/favorites": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user favorites",
+                "description": "Get user's favorite mangas",
+                "operationId": "userFavorites",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Favorites retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MangaListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Add manga to favorites",
+                "description": "Add manga to favorites",
+                "operationId": "addFavorite",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "manga_id"
+                                ],
+                                "properties": {
+                                    "manga_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Manga added",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Already favorited",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/favorites/{manga_id}": {
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Remove manga from favorites",
+                "description": "Remove manga from favorites",
+                "operationId": "removeFavorite",
+                "parameters": [
+                    {
+                        "name": "manga_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manga removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/favorites/{manga_id}/status": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Check favorite status",
+                "description": "Check if manga is in user's favorites",
+                "operationId": "checkFavoriteStatus",
+                "parameters": [
+                    {
+                        "name": "manga_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FavoriteStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/favorites/{manga_id}/toggle": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Toggle favorite status",
+                "description": "Toggle manga favorite status\n\nThis endpoint provides a single-call solution to toggle favorites.\nIf the manga is already favorited, it will be removed.\nIf the manga is not favorited, it will be added.",
+                "operationId": "toggleFavorite",
+                "parameters": [
+                    {
+                        "name": "manga_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status toggled",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ToggleFavoriteResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Manga not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/histories": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get reading history",
+                "description": "Get user's reading history",
+                "operationId": "userHistories",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "History retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ReadingHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/histories/{manga_id}": {
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Remove from history",
+                "description": "Remove manga from reading history",
+                "operationId": "removeHistory",
+                "parameters": [
+                    {
+                        "name": "manga_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "History removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/achievements": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get achievements",
+                "description": "Get user's achievements",
+                "operationId": "userAchievements",
+                "responses": {
+                    "200": {
+                        "description": "Achievements retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserAchievementsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/pets": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get pets",
+                "description": "Get user's pets",
+                "operationId": "userPets",
+                "responses": {
+                    "200": {
+                        "description": "Pets retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserPetsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChapterReport": {
+                "title": "Chapter Report",
+                "description": "User report about chapter issues",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "report_type": {
+                        "type": "string",
+                        "example": "wrong_images"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Images are in wrong order",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "resolved",
+                            "rejected"
+                        ],
+                        "example": "pending"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "John Doe"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "chapter": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Chapter 1"
+                            },
+                            "slug": {
+                                "type": "string",
+                                "example": "chapter-1"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "manga": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "One Piece"
+                            },
+                            "slug": {
+                                "type": "string",
+                                "example": "one-piece"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ReportTypesResponse": {
+                "title": "Report Types Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Report types retrieved successfully"
+                    },
+                    "data": {
+                        "type": "object",
+                        "example": {
+                            "wrong_images": "Wrong images",
+                            "missing_images": "Missing images",
+                            "wrong_order": "Wrong order",
+                            "broken_images": "Broken images",
+                            "other": "Other"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ChapterReportResponse": {
+                "title": "Chapter Report Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Chapter report submitted successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/ChapterReport"
+                    }
+                },
+                "type": "object"
+            },
+            "ChapterReportListResponse": {
+                "title": "Chapter Report List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "User chapter reports retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChapterReport"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "CreateChapterReportRequest": {
+                "title": "Create Chapter Report Request",
+                "required": [
+                    "report_type"
+                ],
+                "properties": {
+                    "report_type": {
+                        "description": "Type of report",
+                        "type": "string",
+                        "example": "wrong_images"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "example": "Detailed description of the issue",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Chapter": {
+                "title": "Chapter",
+                "description": "Manga chapter model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Chapter 1: Beginning"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "chapter-1-beginning"
+                    },
+                    "views": {
+                        "type": "integer",
+                        "example": 10000
+                    },
+                    "order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "chapter_number": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "manga": {
+                        "$ref": "#/components/schemas/Manga"
+                    },
+                    "content": {
+                        "description": "Array of image URLs (available in show/images endpoints)",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://example.com/chapters/page-01.jpg"
+                        }
+                    },
+                    "images": {
+                        "description": "Array of image URLs for reading interface",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "https://example.com/chapters/page-01.jpg"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ChapterImagesResponse": {
+                "title": "Chapter Images Response",
+                "description": "Response containing chapter images for reading",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Chapter images retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Chapter"
+                    }
+                },
+                "type": "object"
+            },
+            "ChapterDetailResponse": {
+                "title": "Chapter Detail Response",
+                "description": "Response containing chapter details with navigation",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Chapter retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Chapter"
+                    }
+                },
+                "type": "object"
+            },
+            "ChapterListResponse": {
+                "title": "Chapter List Response",
+                "description": "Response containing paginated list of chapters",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Chapters retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Chapter"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "MarkAsReadRequest": {
+                "title": "Mark Chapter as Read Request",
+                "description": "Request body for marking chapter as read",
+                "properties": {
+                    "manga_id": {
+                        "description": "Manga ID",
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "Comment": {
+                "title": "Comment",
+                "description": "User comment on manga or chapter",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Great chapter!"
+                    },
+                    "parent_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "replies_count": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "John Doe"
+                            },
+                            "avatar": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "replies": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Comment"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CommentListResponse": {
+                "title": "Comment List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Comments retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Comment"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "CommentDetailResponse": {
+                "title": "Comment Detail Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Comment created successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Comment"
+                    }
+                },
+                "type": "object"
+            },
+            "CreateCommentRequest": {
+                "title": "Create Comment Request",
+                "required": [
+                    "content"
+                ],
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "example": "This is a great manga!"
+                    },
+                    "parent_id": {
+                        "description": "ID of parent comment for replies",
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateCommentRequest": {
+                "title": "Update Comment Request",
+                "required": [
+                    "content"
+                ],
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "example": "Updated comment text"
+                    }
+                },
+                "type": "object"
+            },
+            "SuccessResponse": {
+                "title": "Success Response",
+                "description": "Standard success response wrapper",
+                "required": [
+                    "success",
+                    "message"
+                ],
+                "properties": {
+                    "success": {
+                        "description": "Indicates request was successful",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "description": "Success message",
+                        "type": "string",
+                        "example": "Success"
+                    },
+                    "data": {
+                        "description": "Response payload (can be object, array, or null)"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "title": "Error Response",
+                "description": "Standard error response wrapper",
+                "required": [
+                    "success",
+                    "message"
+                ],
+                "properties": {
+                    "success": {
+                        "description": "Indicates request failed",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "description": "Error message",
+                        "type": "string",
+                        "example": "Error occurred"
+                    },
+                    "errors": {
+                        "description": "Detailed error information (optional, present in validation errors)",
+                        "type": "object",
+                        "example": {
+                            "email": [
+                                "The email field is required."
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "title": "Pagination Metadata",
+                "description": "Pagination information for list responses",
+                "properties": {
+                    "current_page": {
+                        "description": "Current page number",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "from": {
+                        "description": "First item index on current page",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "description": "Last page number",
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "per_page": {
+                        "description": "Items per page",
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "to": {
+                        "description": "Last item index on current page",
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "total": {
+                        "description": "Total number of items",
+                        "type": "integer",
+                        "example": 150
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationLinks": {
+                "title": "Pagination Links",
+                "description": "Navigation links for pagination",
+                "properties": {
+                    "first": {
+                        "description": "URL to first page",
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/manga?page=1"
+                    },
+                    "last": {
+                        "description": "URL to last page",
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/manga?page=10"
+                    },
+                    "prev": {
+                        "description": "URL to previous page (null if on first page)",
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "next": {
+                        "description": "URL to next page (null if on last page)",
+                        "type": "string",
+                        "example": "http://localhost:8000/api/v1/manga?page=2",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrorResponse": {
+                "title": "Validation Error Response",
+                "description": "Response for validation failures (422)",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Validation failed"
+                    },
+                    "errors": {
+                        "description": "Field-specific validation errors",
+                        "type": "object",
+                        "example": {
+                            "email": [
+                                "The email field is required."
+                            ],
+                            "password": [
+                                "The password must be at least 8 characters."
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Achievement": {
+                "title": "Achievement",
+                "description": "User achievement/badge",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Newbie Reader"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Read 10 chapters"
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/achievements/newbie.png",
+                        "nullable": true
+                    },
+                    "points_required": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "unlocked_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Pet": {
+                "title": "Pet",
+                "description": "User pet/companion",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Dragon"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Legendary dragon pet"
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/pets/dragon.png",
+                        "nullable": true
+                    },
+                    "price": {
+                        "type": "integer",
+                        "example": 1000
+                    },
+                    "owned_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UserAchievementsResponse": {
+                "title": "User Achievements Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Achievements retrieved successfully"
+                    },
+                    "data": {
+                        "properties": {
+                            "current_achievement": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Achievement"
+                                    }
+                                ],
+                                "nullable": true
+                            },
+                            "unlocked_achievements": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Achievement"
+                                }
+                            },
+                            "achievements_points": {
+                                "type": "integer",
+                                "example": 50
+                            },
+                            "limit_achievement_points": {
+                                "type": "integer",
+                                "example": 100
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "UserPetsResponse": {
+                "title": "User Pets Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Pets retrieved successfully"
+                    },
+                    "data": {
+                        "properties": {
+                            "current_pet": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/Pet"
+                                    }
+                                ],
+                                "nullable": true
+                            },
+                            "owned_pets": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Pet"
+                                }
+                            },
+                            "total_points": {
+                                "type": "integer",
+                                "example": 5000
+                            },
+                            "used_points": {
+                                "type": "integer",
+                                "example": 2000
+                            },
+                            "available_points": {
+                                "type": "integer",
+                                "example": 3000
+                            },
+                            "limit_pet_points": {
+                                "type": "integer",
+                                "example": 10000
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ReadingHistoryItem": {
+                "title": "Reading History Item",
+                "properties": {
+                    "manga": {
+                        "$ref": "#/components/schemas/Manga"
+                    },
+                    "last_read_chapter": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Chapter 10"
+                            },
+                            "slug": {
+                                "type": "string",
+                                "example": "chapter-10"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "last_read_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ReadingHistoryResponse": {
+                "title": "Reading History Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Reading history retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReadingHistoryItem"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "FavoriteStatusResponse": {
+                "title": "Favorite Status Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Favorite status retrieved successfully"
+                    },
+                    "data": {
+                        "properties": {
+                            "manga_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "is_favorited": {
+                                "type": "boolean",
+                                "example": true
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ToggleFavoriteResponse": {
+                "title": "Toggle Favorite Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Manga added to favorites"
+                    },
+                    "data": {
+                        "properties": {
+                            "is_following": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "manga_id": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Manga": {
+                "title": "Manga",
+                "description": "Manga model with metadata and relationships",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "One Piece"
+                    },
+                    "name_alt": {
+                        "type": "string",
+                        "example": "ワンピース",
+                        "nullable": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "one-piece"
+                    },
+                    "pilot": {
+                        "type": "string",
+                        "example": "Story about pirates...",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ongoing",
+                            "completed",
+                            "hiatus"
+                        ],
+                        "example": "ongoing"
+                    },
+                    "views": {
+                        "type": "integer",
+                        "example": 1000000
+                    },
+                    "views_week": {
+                        "type": "integer",
+                        "example": 50000
+                    },
+                    "views_day": {
+                        "type": "integer",
+                        "example": 5000
+                    },
+                    "average_rating": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.5,
+                        "nullable": true
+                    },
+                    "total_ratings": {
+                        "type": "integer",
+                        "example": 1500
+                    },
+                    "is_hot": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_reviewed": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "cover_full_url": {
+                        "type": "string",
+                        "example": "https://example.com/covers/one-piece.jpg",
+                        "nullable": true
+                    },
+                    "finished_by": {
+                        "type": "string",
+                        "example": "Admin",
+                        "nullable": true
+                    },
+                    "hot_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "artist_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "group_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "doujinshi_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "artist": {
+                        "$ref": "#/components/schemas/Artist"
+                    },
+                    "doujinshi": {
+                        "$ref": "#/components/schemas/Doujinshi"
+                    },
+                    "group": {
+                        "$ref": "#/components/schemas/Group"
+                    },
+                    "latest_chapter": {
+                        "$ref": "#/components/schemas/Chapter"
+                    },
+                    "first_chapter": {
+                        "$ref": "#/components/schemas/Chapter"
+                    },
+                    "chapters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Chapter"
+                        }
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Genre"
+                        }
+                    },
+                    "trim_pilot": {
+                        "type": "string",
+                        "example": "Story about pirates..."
+                    }
+                },
+                "type": "object"
+            },
+            "MangaListResponse": {
+                "title": "Manga List Response",
+                "description": "Paginated list of manga",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Manga list retrieved successfully"
+                    },
+                    "data": {
+                        "properties": {
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Manga"
+                                }
+                            },
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "last_page": {
+                                "type": "integer",
+                                "example": 10
+                            },
+                            "per_page": {
+                                "type": "integer",
+                                "example": 20
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 200
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "MangaDetailResponse": {
+                "title": "Manga Detail Response",
+                "description": "Single manga details",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Manga retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Manga"
+                    }
+                },
+                "type": "object"
+            },
+            "Rating": {
+                "title": "Rating",
+                "description": "User rating for a manga",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rating": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "John Doe"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "manga": {
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "One Piece"
+                            },
+                            "slug": {
+                                "type": "string",
+                                "example": "one-piece"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "RatingResponse": {
+                "title": "Rating Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Rating saved successfully"
+                    },
+                    "data": {
+                        "properties": {
+                            "rating": {
+                                "$ref": "#/components/schemas/Rating"
+                            },
+                            "manga_stats": {
+                                "properties": {
+                                    "average_rating": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4.3
+                                    },
+                                    "total_ratings": {
+                                        "type": "integer",
+                                        "example": 150
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "RatingRequest": {
+                "title": "Rating Request",
+                "required": [
+                    "rating"
+                ],
+                "properties": {
+                    "rating": {
+                        "description": "Rating value from 1 to 5",
+                        "type": "number",
+                        "format": "float",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "example": 4.5
+                    }
+                },
+                "type": "object"
+            },
+            "Sticker": {
+                "title": "Sticker",
+                "description": "Individual sticker item",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sticker_set_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Happy Face"
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://cdn.example.com/stickers/happy.png"
+                    },
+                    "order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "StickerSet": {
+                "title": "Sticker Set",
+                "description": "Collection of stickers",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Emotions"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Emotional stickers",
+                        "nullable": true
+                    },
+                    "order": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "stickers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Sticker"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "StickerSetsResponse": {
+                "title": "Sticker Sets Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StickerSet"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "StickerSetResponse": {
+                "title": "Sticker Set Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/StickerSet"
+                    }
+                },
+                "type": "object"
+            },
+            "Genre": {
+                "title": "Genre",
+                "description": "Manga genre/category",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Action"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "action"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Action packed manga",
+                        "nullable": true
+                    },
+                    "color": {
+                        "type": "string",
+                        "example": "#FF0000",
+                        "nullable": true
+                    },
+                    "is_nsfw": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mangas_count": {
+                        "type": "integer",
+                        "example": 150
+                    }
+                },
+                "type": "object"
+            },
+            "Artist": {
+                "title": "Artist",
+                "description": "Manga artist/author",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Eiichiro Oda"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "eiichiro-oda"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Creator of One Piece",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mangas_count": {
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            },
+            "Group": {
+                "title": "Group",
+                "description": "Translation/scanlation group",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "VietTrans Team"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "viettrans-team"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Vietnamese translation group",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mangas_count": {
+                        "type": "integer",
+                        "example": 50
+                    }
+                },
+                "type": "object"
+            },
+            "Doujinshi": {
+                "title": "Doujinshi",
+                "description": "Doujinshi/fanwork series",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Naruto Doujinshi"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "naruto-doujinshi"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Fan-made Naruto works",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mangas_count": {
+                        "type": "integer",
+                        "example": 25
+                    }
+                },
+                "type": "object"
+            },
+            "GenreListResponse": {
+                "title": "Genre List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Genres retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Genre"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GenreDetailResponse": {
+                "title": "Genre Detail Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Genre retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Genre"
+                    }
+                },
+                "type": "object"
+            },
+            "ArtistListResponse": {
+                "title": "Artist List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Artists retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Artist"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ArtistDetailResponse": {
+                "title": "Artist Detail Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Artist retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Artist"
+                    }
+                },
+                "type": "object"
+            },
+            "GroupListResponse": {
+                "title": "Group List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Groups retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Group"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GroupDetailResponse": {
+                "title": "Group Detail Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Group retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Group"
+                    }
+                },
+                "type": "object"
+            },
+            "DoujinshiListResponse": {
+                "title": "Doujinshi List Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Doujinshis retrieved successfully"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Doujinshi"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "DoujinshiDetailResponse": {
+                "title": "Doujinshi Detail Response",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Doujinshi retrieved successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Doujinshi"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "title": "User",
+                "description": "User model with points system",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "avatar_full_url": {
+                        "type": "string",
+                        "example": "https://example.com/avatar.jpg",
+                        "nullable": true
+                    },
+                    "level": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total_points": {
+                        "type": "integer",
+                        "example": 500
+                    },
+                    "used_points": {
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "available_points": {
+                        "type": "integer",
+                        "example": 300
+                    },
+                    "achievements_points": {
+                        "type": "integer",
+                        "example": 150
+                    },
+                    "limit_pet_points": {
+                        "type": "integer",
+                        "example": 1000
+                    },
+                    "limit_achievement_points": {
+                        "type": "integer",
+                        "example": 1000
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AuthResponse": {
+                "title": "Authentication Response",
+                "description": "Response from login/register/google endpoints",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Login successful"
+                    },
+                    "data": {
+                        "properties": {
+                            "user": {
+                                "$ref": "#/components/schemas/User"
+                            },
+                            "token": {
+                                "type": "string",
+                                "example": "1|abcdefghijklmnopqrstuvwxyz"
+                            },
+                            "token_type": {
+                                "type": "string",
+                                "example": "Bearer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "title": "Login Request",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "title": "Register Request",
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "minLength": 8,
+                        "example": "password123"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileRequest": {
+                "title": "Update Profile Request",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe Updated"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "newemail@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "minLength": 8,
+                        "example": "newpassword123"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "newpassword123"
+                    },
+                    "avatar": {
+                        "description": "Image file (jpeg, png, jpg, gif, max 2MB)",
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "type": "object"
+            },
+            "GoogleAuthRequest": {
+                "title": "Google OAuth Request",
+                "required": [
+                    "access_token"
+                ],
+                "properties": {
+                    "access_token": {
+                        "description": "Google OAuth access token",
+                        "type": "string",
+                        "example": "ya29.a0AfH6SMBx..."
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication and registration endpoints"
+        },
+        {
+            "name": "Social",
+            "description": "Social login integrations (Google)"
+        },
+        {
+            "name": "Manga",
+            "description": "Manga CRUD operations and listings"
+        },
+        {
+            "name": "Chapters",
+            "description": "Chapter management and reading"
+        },
+        {
+            "name": "Genres",
+            "description": "Genre taxonomy operations"
+        },
+        {
+            "name": "Artists",
+            "description": "Artist taxonomy operations"
+        },
+        {
+            "name": "Groups",
+            "description": "Translation group taxonomy"
+        },
+        {
+            "name": "Doujinshi",
+            "description": "Doujinshi-specific operations"
+        },
+        {
+            "name": "Users",
+            "description": "User profile and management"
+        },
+        {
+            "name": "Comments",
+            "description": "Comment system operations"
+        },
+        {
+            "name": "Ratings",
+            "description": "Manga rating system"
+        },
+        {
+            "name": "Stickers",
+            "description": "Sticker/emoji system for comments"
+        },
+        {
+            "name": "Chapter Reports",
+            "description": "Chapter Reports"
+        }
+    ]
+}
