@@ -30,7 +30,7 @@
                             <div class="form-group mb-3">
                                 <label for="option" class="form-label text-danger">Loại trừ số chương (lớn hơn tự động bỏ
                                     qua)</label>
-                                <input type="number" id="option" class="form-control" name="option" min="0" value="100">
+                                <input type="number" id="option" class="form-control" name="option" min="0" value="1000">
                             </div>
                             <div class="form-group">
                                 <button type="submit" class="btn btn-success btn-load">Tải</button>
@@ -109,7 +109,21 @@
                         url: url + "/mangas?page=" + i,
                         method: 'GET',
                         success: function (response) {
-                            let comics = response.data.data; // MangaListResponse: data.data
+                            // Check for different possible structures of response
+                            let comics = [];
+                            if (response.data && Array.isArray(response.data.data)) {
+                                comics = response.data.data;
+                            } else if (response.data && Array.isArray(response.data)) {
+                                comics = response.data;
+                            } else if (Array.isArray(response)) {
+                                comics = response;
+                            }
+
+                            if (comics.length === 0) {
+                                console.warn("No comics found on page " + i);
+                                return;
+                            }
+
                             comics.forEach((comic, index) => {
                                 // Logic to filter chapters if needed, but list might not have chapter count readily available
                                 // or we check 'latest_chapter'
@@ -124,7 +138,7 @@
                             });
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            console.log("Error crawling page " + i);
+                            console.log("Error crawling page " + i + ": " + textStatus);
                         }
                     });
                     promises.push(p);
@@ -224,120 +238,145 @@
                 let currentChap = 0;
 
                 for (const comicSlug of comicSlugs) {
+                try {
+                    // 1. Fetch comic details
+                    const response = await $.ajax({
+                        url: baseUrl + "/mangas/" + comicSlug,
+                        method: 'GET'
+                    });
+
+                    const comicData = response.data;
+
+                    // 2. Fetch Chapters List specifically (if not fully included/paginated in detail)
+                    // API docs: /api/v1/mangas/{slug}/chapters
+                    let chapters = [];
                     try {
-                        // Fetch comic details from External API
-                        const response = await $.ajax({
-                            url: baseUrl + "/mangas/" + comicSlug,
-                            method: 'GET'
-                        });
+                        let page = 1;
+                        let hasMore = true;
+                        while (hasMore) {
+                            const chaptersResp = await $.ajax({
+                                url: baseUrl + "/mangas/" + comicSlug + "/chapters?per_page=1000&page=" + page,
+                                method: 'GET'
+                            });
+                            // ChapterListResponse: data -> array of Chapter
+                            let fetchedChapters = [];
+                            if (Array.isArray(chaptersResp.data)) {
+                                fetchedChapters = chaptersResp.data;
+                            } else if (chaptersResp.data && Array.isArray(chaptersResp.data.data)) { // Pagination wrapper
+                                fetchedChapters = chaptersResp.data.data;
+                            }
 
-                        const comicData = response.data; // MangaDetailResponse -> data
-
-                        // Prepare data for backend
-                        // Map API response to what CrawlController expects
-                        const postData = {
-                            _token: "{{ csrf_token() }}",
-                            serverName: 'DamCoNuong', // Identify the crawler
-                            baseUrl: baseUrl,
-                            name: comicData.name,
-                            slug: comicData.slug,
-                            origin_name: comicData.name_alt,
-                            content: comicData.pilot,
-                            status: comicData.status, // "ongoing"
-                            author: comicData.artist ? comicData.artist.name : "Updating",
-                            thumbnail: comicData.cover_full_url,
-                            categories: comicData.genres, // genres is array of {name, slug}
-                            // Helper for controller
-                            manga_uuid: comicData.uuid
-                        };
-
-                        const res = await $.ajax({
-                            url: "{{route("admin.addComicByCrawl")}}",
-                            method: 'POST',
-                            data: postData
-                        });
-
-                        // Count total chapters to crawl
-                        // comicData.chapters is array of Chapter objects
-                        let chapters = comicData.chapters || [];
-                        totalChapters += chapters.length;
-                        $(".total-crawl-chapter-count").text(totalChapters);
-
-                        messages += "<span class='text-success'><i class='bi bi-check'></i>" + res.message + "</span><br>";
-                        $(".crawl-success-count").text(parseInt($(".crawl-success-count").text()) + 1);
-                        $(".crawled-count").text(parseInt($(".crawled-count").text()) + 1);
-
-                        // Crawl Chapters
-                        if (chapters.length > 0) {
-                            // Reverse chapters to add from first to last? 
-                            // OTruyen loops array_reverse. 
-                            // API usually returns latest first (desc). So reversing makes sense to add Ch 1 first.
-                            let reversedChapters = [...chapters].reverse();
-
-                            for (const chapter of reversedChapters) {
-                                // Check if chapter already exists (Controller returns last added chapter?)
-                                // User logic: check if chapter number > limit
-                                // Note: chapter.name might be "Chapter 1" or "Chapter 1: Title". 
-                                // chapter.chapter_number is "1".
-
-                                // Check backend "currentChapter" response
-                                if (parseFloat(chapter.chapter_number) <= parseFloat(res.currentChapter)) {
-                                    // Skip if already exists
-                                    currentChap += 1; // Count as done?
-                                    $(".crawled-chapter-count").text(currentChap);
-                                    continue;
+                            if (fetchedChapters.length > 0) {
+                                chapters = chapters.concat(fetchedChapters);
+                                page++;
+                                // Safety break or check meta last_page
+                                if (chaptersResp.meta && chaptersResp.meta.last_page && page > chaptersResp.meta.last_page) {
+                                    hasMore = false;
+                                } else if (fetchedChapters.length < 1000) {
+                                    hasMore = false;
                                 }
-
-                                try {
-                                    const response1 = await $.ajax({
-                                        url: "{{route("admin.addChapterByCrawl")}}",
-                                        method: 'POST',
-                                        data: {
-                                            _token: "{{ csrf_token() }}",
-                                            serverName: 'DamCoNuong',
-                                            baseUrl: baseUrl,
-                                            manga_slug: comicSlug,
-                                            chapter_slug: chapter.slug,
-                                            chapter_data: chapter, // pass chapter metadata
-                                            id: res.id // Comic ID in DB
-                                        },
-                                        beforeSend: function () {
-                                            $(".craw-chapter-status").removeClass("d-none");
-                                        }
-                                    });
-
-                                    messages += "<span class='text-success'><i class='bi bi-check'></i>" + response1 + "</span><br>";
-                                    $(".crawl-success-chapter-count").text(parseInt($(".crawl-success-chapter-count").text()) + 1);
-
-                                } catch (error) {
-                                    $(".crawl-failed-chapter-count").text(parseInt($(".crawl-failed-chapter-count").text()) + 1);
-                                    messages += "<span class='text-danger'><i class='bi bi-x'></i>" + "Thêm thất bại bộ " + comicSlug + " chương " + chapter.chapter_number + ".</span><br>";
-                                } finally {
-                                    currentChap += 1;
-                                    $(".crawled-chapter-count").text(currentChap);
-                                    $("#crawl-list").html(messages);
-                                    const listsDiv = document.getElementById('crawl-list');
-                                    listsDiv.scrollTop = listsDiv.scrollHeight;
-                                    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay
-                                }
+                            } else {
+                                hasMore = false;
                             }
                         }
-
-                    } catch (error) {
-                        $(".crawl-failed-count").text(parseInt($(".crawl-failed-count").text()) + 1);
-                        $(".crawled-count").text(parseInt($(".crawled-count").text()) + 1);
-                        messages += "<span class='text-danger'><i class='bi bi-x'></i>" + "Thêm thất bại bộ " + comicSlug + ": " + (error.responseText || error.statusText) + "</span><br>";
-                    } finally {
-                        $("#crawl-list").html(messages);
+                    } catch (e) {
+                        console.warn("Could not fetch separate chapter list, using embedded if available", e);
+                        chapters = comicData.chapters || [];
                     }
-                }
-                $(".btn-finally").text('Xong');
-            });
 
-            $('.btn-finally').on('click', function () {
-                sessionStorage.setItem('ListComics', "");
-                window.location.href = "{{ route('admin.api.damconuong') }}";
-            });
+                    // 3. Prepare data for backend
+                    const postData = {
+                        _token: "{{ csrf_token() }}",
+                        serverName: 'DamCoNuong',
+                        baseUrl: baseUrl,
+                        name: comicData.name,
+                        slug: comicData.slug,
+                        origin_name: comicData.name_alt,
+                        content: comicData.pilot,
+                        status: comicData.status,
+                        author: comicData.artist ? comicData.artist.name : "Updating",
+                        thumbnail: comicData.cover_full_url,
+                        categories: comicData.genres,
+                        manga_uuid: comicData.uuid
+                    };
+
+                    const res = await $.ajax({
+                        url: "{{route("admin.addComicByCrawl")}}",
+                        method: 'POST',
+                        data: postData
+                    });
+
+                    totalChapters += chapters.length;
+                    $(".total-crawl-chapter-count").text(totalChapters);
+                    messages += "<span class='text-success'><i class='bi bi-check'></i>" + res.message + "</span><br>";
+                    $(".crawl-success-count").text(parseInt($(".crawl-success-count").text()) + 1);
+                    $(".crawled-count").text(parseInt($(".crawled-count").text()) + 1);
+
+                    // 4. Crawl Chapters
+                    if (chapters.length > 0) {
+                        // Reverse to start from oldest (Chapter 1)
+                        // API usually returns newest first?
+                        // Check 'order' or 'chapter_number' to be sure? 
+                        // Let's assume standard DESC return and Reverse it.
+                        let reversedChapters = [...chapters].reverse();
+
+                        for (const chapter of reversedChapters) {
+                            if (parseFloat(chapter.chapter_number) <= parseFloat(res.currentChapter)) {
+                                currentChap += 1;
+                                $(".crawled-chapter-count").text(currentChap);
+                                continue;
+                            }
+
+                            try {
+                                const response1 = await $.ajax({
+                                    url: "{{route("admin.addChapterByCrawl")}}",
+                                    method: 'POST',
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        serverName: 'DamCoNuong',
+                                        baseUrl: baseUrl,
+                                        manga_slug: comicSlug,
+                                        chapter_slug: chapter.slug,
+                                        chapter_data: chapter,
+                                        id: res.id
+                                    },
+                                    beforeSend: function () {
+                                        $(".craw-chapter-status").removeClass("d-none");
+                                    }
+                                });
+
+                                messages += "<span class='text-success'><i class='bi bi-check'></i>" + response1 + "</span><br>";
+                                $(".crawl-success-chapter-count").text(parseInt($(".crawl-success-chapter-count").text()) + 1);
+
+                            } catch (error) {
+                                $(".crawl-failed-chapter-count").text(parseInt($(".crawl-failed-chapter-count").text()) + 1);
+                                messages += "<span class='text-danger'><i class='bi bi-x'></i>" + "Thêm thất bại bộ " + comicSlug + " chương " + chapter.chapter_number + ".</span><br>";
+                            } finally {
+                                currentChap += 1;
+                                $(".crawled-chapter-count").text(currentChap);
+                                $("#crawl-list").html(messages);
+                                const listsDiv = document.getElementById('crawl-list');
+                                listsDiv.scrollTop = listsDiv.scrollHeight;
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                        }
+                    }
+
+                } catch (error) {
+                    $(".crawl-failed-count").text(parseInt($(".crawl-failed-count").text()) + 1);
+                    $(".crawled-count").text(parseInt($(".crawled-count").text()) + 1);
+                    messages += "<span class='text-danger'><i class='bi bi-x'></i>" + "Thêm thất bại bộ " + comicSlug + ": " + (error.responseText || error.statusText) + "</span><br>";
+                } finally {
+                    $("#crawl-list").html(messages);
+                }
+            }
+            $(".btn-finally").text('Xong');
         });
+
+        $('.btn-finally').on('click', function () {
+            sessionStorage.setItem('ListComics', "");
+            window.location.href = "{{ route('admin.api.damconuong') }}";
+        });
+            });
     </script>
 @endpush
