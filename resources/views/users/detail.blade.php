@@ -21,8 +21,8 @@
                                         <img src="{{$comic->thumbnail}}" alt="{{$comic->name}}">
                                     </div>
 
-                                    <a href="" class="report" data-bs-toggle="modal" data-bs-target="#ReportModal"
-                                        rel="nofollow">
+                                    <a href="javascript:void(0)" class="report" data-bs-toggle="modal"
+                                        data-bs-target="#ReportModal" rel="nofollow">
                                         <i class="icon-info-circle"></i>
                                         Báo cáo lỗi</a>
                                 </div>
@@ -722,7 +722,7 @@
                             <ul class="nav nav-tabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <a href="" class="nav-link active" id="day-tab
-                                  " data-bs-toggle="tab" data-bs-target="#day" role="tab" aria-controls="day"
+                                              " data-bs-toggle="tab" data-bs-target="#day" role="tab" aria-controls="day"
                                         aria-selected="true">Ngày</a>
                                 </li>
                                 <li class="nav-item" role="presentation">
@@ -916,6 +916,70 @@
             </div>
         </div>
     </div>
+
+    <!-- Full Description Modal -->
+    <div class="modal fade" id="fullDescriptionModal" tabindex="-1" aria-labelledby="fullDescriptionModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullDescriptionModalLabel">Tóm tắt nội dung</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="icon-close-circle"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {!! $comic->content !!}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="ReportModal" tabindex="-1" aria-labelledby="ReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ReportModalLabel">Báo cáo lỗi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="icon-close-circle"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form class="report-form">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="report-reason_5"
+                                data-reason="Có yếu tố phá hoại (đăng chap troll, dịch bậy, v.v.)">
+                            <label class="form-check-label" for="report-reason_5">Có yếu tố phá hoại (đăng chap troll, dịch
+                                bậy, v.v.)</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="report-reason_4"
+                                data-reason="Thiếu ảnh bìa chap nếu có">
+                            <label class="form-check-label" for="report-reason_4">Thiếu ảnh bìa chap nếu có</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="report-reason_3" data-reason="Ảnh bị lỗi">
+                            <label class="form-check-label" for="report-reason_3">Ảnh bị lỗi</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="report-reason_2"
+                                data-reason="Số vol/chap bị sai số/thiếu">
+                            <label class="form-check-label" for="report-reason_2">Số vol/chap bị sai số/thiếu</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="report-reason_1"
+                                data-reason="Chap bị lặp lại">
+                            <label class="form-check-label" for="report-reason_1">Chap bị lặp lại</label>
+                        </div>
+                        <textarea class="form-control form-control-textarea" name="content" maxlength="3000"
+                            placeholder="Gặp vấn đề khác xin điền ở đây..."></textarea>
+                        <button type="button" class="btn btn-primary w-100 mt-3" data-bs-dismiss="modal">Báo cáo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <script>
@@ -1034,10 +1098,17 @@
     </script>
     <script src="{{asset('assets/theme/js/detail.js')}}"></script>
     <script>
-        var id_item = '{{$comic->id}}';
-        var chapter_id = null;
-        var table = "comic";
-    </script>
-    <script type="text/javascript" src="/assets/js/tinymce.min.js"></script>
-    <script type="text/javascript" src="/assets/js/comment.min.js"></script>
+        $(document).ready(function() {
+                $('.report-form button').on('click', function() {
+                    alertNoti('Cảm ơn bạn đã báo cáo lỗi. Chúng tôi sẽ xử lý sớm nhất có thể.');
+                });
+            });
+        </script>
+        <script>
+            var id_item = '{{$comic->id}}';
+            var chapter_id = null;
+            var table = "comic";
+        </script>
+        <script type="text/javascript" src="/assets/js/tinymce.min.js"></script>
+        <script type="text/javascript" src="/assets/js/comment.min.js"></script>
 @endsection

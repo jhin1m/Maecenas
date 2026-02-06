@@ -39,7 +39,7 @@ class HomeController extends Controller
         SEOMeta::addMeta('article:published_time', now(), 'property');
         $page = $request->input('page') ?? 1;
         $comicsMostViews = Cache::remember('home.hot_mangas', 86400, function () {
-            return Comic::orderByDesc('view_total')->with('lastChapter')->take(8)->get();
+            return Comic::orderByDesc('view_total')->with('chapters')->take(8)->get();
         });
 
         $categories = Cache::remember('home.categories', 86400, function () {
@@ -77,7 +77,7 @@ class HomeController extends Controller
         $comicsMonthly = $ranking['comicsMonthly'];
 
         $comicsUpdated = Cache::remember('comicsUpdated_' . $page, 3600, function () {
-            return Comic::orderBy('updated_at', 'desc')->paginate(24);
+            return Comic::orderBy('updated_at', 'desc')->with('chapters')->paginate(24);
         });
 
         $completedComics = Cache::remember('completedComics', 3600, function () {
@@ -109,7 +109,7 @@ class HomeController extends Controller
 
     public function showDetailComic($slug)
     {
-        $comic = Comic::where('slug', $slug)->withCount('follows')->first();
+        $comic = Comic::where('slug', $slug)->withCount('follows')->with(['chapters', 'categories', 'author'])->first();
         if (!$comic) {
             abort(404);
         }
@@ -152,11 +152,11 @@ class HomeController extends Controller
 
         $relatedComics = Comic::whereHas('categories', function ($query) use ($comic) {
             $query->whereIn('category_id', $comic->categories->pluck('id'));
-        })->where('id', '!=', $comic->id)->orderByDesc('view_total')->limit(5)->get();
+        })->where('id', '!=', $comic->id)->with('lastChapter')->orderByDesc('view_total')->limit(5)->get();
 
-        $topReadComicsMonthly = Comic::orderByDesc('view_month')->limit(6)->get();
-        $topReadComicsDaily = Comic::orderByDesc('view_day')->limit(6)->get();
-        $topReadComicsWeekly = Comic::orderByDesc('view_week')->limit(6)->get();
+        $topReadComicsMonthly = Comic::orderByDesc('view_month')->with('lastChapter')->limit(6)->get();
+        $topReadComicsDaily = Comic::orderByDesc('view_day')->with('lastChapter')->limit(6)->get();
+        $topReadComicsWeekly = Comic::orderByDesc('view_week')->with('lastChapter')->limit(6)->get();
         return view("/users/detail", compact(
             'comic',
             'follow',
@@ -172,7 +172,7 @@ class HomeController extends Controller
     public function showReadComicPage($slug, $chapter)
     {
         $comic = Cache::remember("comic.{$slug}", 3600, function () use (&$slug) {
-            return Comic::where('slug', $slug)->withCount('comments')->first();
+            return Comic::where('slug', $slug)->withCount('comments')->with('chapters')->first();
         });
         if (!$comic) {
             abort(404);
@@ -251,7 +251,7 @@ class HomeController extends Controller
 
         if ($status == 'all' && $sort == '0') {
             $comics = Cache::remember('comicsUpdated_' . $page, 3600, function () {
-                return Comic::orderBy('updated_at', 'desc')->paginate(24);
+                return Comic::orderBy('updated_at', 'desc')->with('chapters')->paginate(24);
             });
         } else {
             $comics = Comic::withCount('votes', 'follows', 'comments', 'chapters')->with('chapters');
@@ -437,11 +437,13 @@ class HomeController extends Controller
         $pageSize = $request->pageSize ?? 10;
         $orderBy = $request->orderBy ?? 'created_at';
 
+        $query = Comment::where('comic_id', $mangaId)
+            ->with(['user', 'chapter', 'comic', 'replies.user'])
+            ->where('parent_id', null);
         if ($chapterId) {
-            $data = Comment::where('comic_id', $mangaId)->where('chapter_id', $chapterId)->orderBy('created_at', 'desc')->paginate($pageSize);
-        } else {
-            $data = Comment::where('comic_id', $mangaId)->orderBy('created_at', 'desc')->paginate($pageSize);
+            $query->where('chapter_id', $chapterId);
         }
+        $data = $query->orderBy('created_at', 'desc')->paginate($pageSize);
 
         $html = view('components.list-comments', compact('data'))->render();
         return response()->json([
@@ -585,7 +587,11 @@ class HomeController extends Controller
         SEOMeta::addMeta('article:published_time', now(), 'property');
         $metaHtml = $seo[6]->value;
 
-        $categories = Category::withCount('comics')->orderByDesc('comics_count')->limit(5)->get();
+        $categories = Category::withCount('comics')
+            ->with(['comics' => function ($query) {
+                $query->with('chapters')->latest('updated_at')->limit(10);
+            }])
+            ->orderByDesc('comics_count')->limit(5)->get();
 
         return view("/users/category-list", compact('categories', 'metaHtml'));
     }
@@ -682,7 +688,7 @@ class HomeController extends Controller
 
         $comics = Comic::whereHas('author', function ($query) use ($author) {
             $query->where('id_author', $author->id);
-        });
+        })->with('chapters');
 
         if ($status == "1") {
             $comics = $comics->where('status', 'ongoing');
@@ -740,7 +746,7 @@ class HomeController extends Controller
 
         $categories = Category::all();
 
-        $comics = $comics->paginate(24);
+        $comics = $comics->with('chapters')->paginate(24);
         return view("users.advancedFilter", compact('comics', 'categories'));
     }
 
@@ -752,6 +758,7 @@ class HomeController extends Controller
             $comics = Comic::whereHas('follows', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
+                ->with('chapters')
                 ->withCount('follows')
                 ->paginate(20);
         } else {
@@ -776,12 +783,41 @@ class HomeController extends Controller
                 )
                 ->withCount('follows')
                 ->paginate(20);
+            // Batch load: 1 query cho tất cả histories thay vì N queries trong loop
+            $comicIds = $comics->pluck('id');
+            $histories = DB::table('histories')
+                ->where('user_id', $user->id)
+                ->whereIn('comic_id', $comicIds)
+                ->get()
+                ->keyBy('comic_id');
+
+            // Thu thập tất cả chapter IDs cần load
+            $chapterIds = [];
             foreach ($comics as $comic) {
-                $history = DB::table('histories')->where('user_id', $user->id)->where('comic_id', $comic->id)->first();
-                $history = explode(",", $history->chapterComics_id);
-                $comic->history = $history;
-                $conti = DB::table('chapters')->where('id', end($history))->first();
-                $comic->conti = $conti ?? null;
+                if (isset($histories[$comic->id])) {
+                    $chaptersRead = explode(",", $histories[$comic->id]->chapterComics_id);
+                    $comic->history = $chaptersRead;
+                    $lastChapterId = end($chaptersRead);
+                    if ($lastChapterId) {
+                        $chapterIds[] = $lastChapterId;
+                    }
+                }
+            }
+
+            // 1 query cho tất cả chapters thay vì N queries trong loop
+            $continueChapters = DB::table('chapters')
+                ->whereIn('id', $chapterIds)
+                ->get()
+                ->keyBy('id');
+
+            foreach ($comics as $comic) {
+                if (isset($comic->history)) {
+                    $lastChapterId = end($comic->history);
+                    $comic->conti = $continueChapters[$lastChapterId] ?? null;
+                } else {
+                    $comic->history = [];
+                    $comic->conti = null;
+                }
             }
         } else {
             return redirect()->route('home');
@@ -795,7 +831,7 @@ class HomeController extends Controller
             return redirect()->route('home');
         }
         $user = Auth::user();
-        $comments = Comment::where('user_id', $user->id)->orderByDesc('created_at')->paginate(10);
+        $comments = Comment::where('user_id', $user->id)->with(['user', 'comic'])->orderByDesc('created_at')->paginate(10);
         return view("/users/commentPage", compact('comments', 'user'));
     }
 
@@ -889,13 +925,13 @@ class HomeController extends Controller
         $type = $request->input('type') ?? "all";
 
         if ($type == "all") {
-            $comics = Comic::orderByDesc('view_total')->limit(12)->get();
+            $comics = Comic::orderByDesc('view_total')->with('chapters')->limit(12)->get();
         } else if ($type == "day") {
-            $comics = Comic::orderByDesc('view_day')->limit(12)->get();
+            $comics = Comic::orderByDesc('view_day')->with('chapters')->limit(12)->get();
         } else if ($type == "week") {
-            $comics = Comic::orderByDesc('view_week')->limit(12)->get();
+            $comics = Comic::orderByDesc('view_week')->with('chapters')->limit(12)->get();
         } else if ($type == "month") {
-            $comics = Comic::orderByDesc('view_month')->limit(12)->get();
+            $comics = Comic::orderByDesc('view_month')->with('chapters')->limit(12)->get();
         }
 
         $seo = DB::table('seo')->get();
@@ -935,17 +971,17 @@ class HomeController extends Controller
         $blogs = Blog::where('status', 'published')->orderBy('created_at', 'desc')->paginate(12);
 
         $comicsDaily = Cache::remember('home.comics_daily', 86400, function () {
-            return Comic::orderByDesc('view_day')->limit(6)->get();
+            return Comic::orderByDesc('view_day')->with('chapters')->limit(6)->get();
         });
         $comicsWeekly = Cache::remember('home.comics_weekly', 86400, function () {
-            return Comic::orderByDesc('view_week')->limit(6)->get();
+            return Comic::orderByDesc('view_week')->with('chapters')->limit(6)->get();
         });
         $comicsMonthly = Cache::remember('home.comics_monthly', 86400, function () {
-            return Comic::orderByDesc('view_month')->limit(6)->get();
+            return Comic::orderByDesc('view_month')->with('chapters')->limit(6)->get();
         });
 
         $comicsNew = Cache::remember('home.comics_new', 86400, function () {
-            return Comic::orderByDesc('updated_at')->limit(5)->get();
+            return Comic::orderByDesc('updated_at')->with('chapters')->limit(5)->get();
         });
         return view("users.news", compact('blogs', 'metaHtml', 'blogsHot', 'comicsDaily', 'comicsWeekly', 'comicsMonthly', 'comicsNew'));
     }

@@ -133,16 +133,11 @@ if (button) {
 }
 
 // Light mode
+// Light mode
 checkDarkModeConfig();
-const btnDarkmode = document.querySelectorAll('.dark-mode');
-if (btnDarkmode) {
-    btnDarkmode.forEach(function (btn) {
-        btn.addEventListener('click', function (event) {
-            event.preventDefault();
-            toggleDarkModeConfig();
-        });
-    });
-}
+$(document).on('change', '.input-dark-mode', function () {
+    toggleDarkModeConfig();
+});
 
 // Button nav toggle mobile header
 const [btnSearchMobile, btnMenuMobile] = document.querySelectorAll(

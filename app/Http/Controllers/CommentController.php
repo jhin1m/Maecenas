@@ -10,7 +10,7 @@ class CommentController extends Controller
 {
     public function index()
     {
-        $comments = Comment::orderBy('created_at', 'desc')->get();
+        $comments = Comment::with('user')->orderBy('created_at', 'desc')->get();
         return view('pages.comment.index', compact('comments'));
     }
     public function destroy(Request $request)

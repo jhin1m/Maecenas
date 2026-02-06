@@ -4,6 +4,7 @@
     use Illuminate\Support\Facades\DB;
     $shortcut = DB::table('seo')->where('key', 'shortcut')->first();
 @endphp
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -39,11 +40,11 @@
                 });
             } else {
                 @if (Auth::check())
-                sessionStorage.setItem('user', JSON.stringify({
-                    name: '{{Auth::user()->name}}',
-                    avatar: '{{Auth::user()->avatar}}',
-                }));
-                callBack();
+                    sessionStorage.setItem('user', JSON.stringify({
+                        name: '{{Auth::user()->name}}',
+                        avatar: '{{Auth::user()->avatar}}',
+                    }));
+                    callBack();
                 @endif
             }
         }
@@ -60,10 +61,10 @@
             const lightMode = localStorage.getItem('lm');
             if (lightMode === 'true') {
                 document.body.classList.remove('darkmode');
-                $('.dark-mode').removeClass('on');
+                $('.input-dark-mode').prop('checked', false);
             } else {
                 document.body.classList.add('darkmode');
-                $('.dark-mode').addClass('on');
+                $('.input-dark-mode').prop('checked', true);
             }
         }
 
