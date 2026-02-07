@@ -162,7 +162,7 @@ class CrawlDamCoNuong extends Command
         $comic->content = $comicData['pilot'] ?? '';
         $comic->status = $comicData['status'] ?? 'ongoing';
         $comic->thumbnail = $comicData['cover_full_url'] ?? '';
-        $comic->total_views = $comicData['views'] ?? 0;
+        $comic->view_total = $comicData['views'] ?? 0;  // Sửa: dùng view_total thay vì total_views
         $comic->save();
 
         // Gán thể loại (genres → categories)
