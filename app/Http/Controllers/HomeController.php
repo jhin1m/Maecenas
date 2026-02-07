@@ -812,7 +812,10 @@ class HomeController extends Controller
 
             foreach ($comics as $comic) {
                 if (isset($comic->history)) {
-                    $lastChapterId = end($comic->history);
+                    // Gán vào biến local vì end() cần reference,
+                    // mà $comic->history qua __get trả về copy, không phải reference
+                    $historyArr = $comic->history;
+                    $lastChapterId = end($historyArr);
                     $comic->conti = $continueChapters[$lastChapterId] ?? null;
                 } else {
                     $comic->history = [];

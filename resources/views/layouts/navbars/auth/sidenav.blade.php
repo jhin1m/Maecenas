@@ -239,7 +239,7 @@
                 </div>
             </div>
         </div>
-        <a class="btn btn-primary btn-sm mb-0 w-100" href="https://t.me/onezoroone" target="_blank" type="button">Liên
+        <a class="btn btn-primary btn-sm mb-0 w-100" href="#" target="_blank" type="button">Liên
             hệ ngay</a>
     </div>
 </aside>
