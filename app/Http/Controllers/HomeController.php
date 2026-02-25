@@ -27,9 +27,16 @@ use App\Models\Blog;
 
 class HomeController extends Controller
 {
+    private function getSeoSettings()
+    {
+        return Cache::remember('seo_settings', 3600, function () {
+            return DB::table('seo')->get();
+        });
+    }
+
     public function index(Request $request)
     {
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         SEOTools::setTitle($seo[0]->value);
         SEOTools::setDescription($seo[4]->value);
         SEOMeta::addKeyword($seo[2]->value);
@@ -87,7 +94,13 @@ class HomeController extends Controller
                 ->orderBy('updated_at', 'desc')->limit(12)->get();
         });
 
-        $newComments = Comment::select('id', 'content', 'created_at', 'user_id', 'comic_id')->with('user', 'comic')->orderBy('created_at', 'desc')->limit(15)->get();
+        $newComments = Cache::remember('home.new_comments', 300, function () {
+            return Comment::select('id', 'content', 'created_at', 'user_id', 'comic_id')
+                ->with('user:id,name,avatar', 'comic:id,name,slug')
+                ->orderBy('created_at', 'desc')
+                ->limit(15)
+                ->get();
+        });
 
         $blogs = Cache::remember('blogs', 3600, function () {
             return Blog::orderBy('created_at', 'desc')->with('user')->limit(12)->get();
@@ -119,14 +132,14 @@ class HomeController extends Controller
             '{{$comic->status}}' => $comic->status,
             '{{$comic->origin_name}}' => $comic->origin_name,
         ];
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = str_replace(array_keys($replacements), array_values($replacements), $seo[7]->value);
         SEOTools::setTitle($title);
         SEOTools::setDescription("❶✔️ Đọc truyện {$comic->name} Tiếng Việt bản dịch Full mới nhất");
         SEOMeta::addKeyword("{$comic->name},{$comic->name} tiếng việt,đọc truyện {$comic->name},truyện {$comic->name}");
         SEOTools::opengraph()->addProperty('type', 'article');
         SEOTools::opengraph()->addImage($comic->thumbnail);
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         $metaHtml = $seo[6]->value;
@@ -154,9 +167,15 @@ class HomeController extends Controller
             $query->whereIn('category_id', $comic->categories->pluck('id'));
         })->where('id', '!=', $comic->id)->with('lastChapter')->orderByDesc('view_total')->limit(5)->get();
 
-        $topReadComicsMonthly = Comic::orderByDesc('view_month')->with('lastChapter')->limit(6)->get();
-        $topReadComicsDaily = Comic::orderByDesc('view_day')->with('lastChapter')->limit(6)->get();
-        $topReadComicsWeekly = Comic::orderByDesc('view_week')->with('lastChapter')->limit(6)->get();
+        $topReadComicsMonthly = Cache::remember('sidebar.top_monthly', 3600, function () {
+            return Comic::orderByDesc('view_month')->with('lastChapter')->limit(6)->get();
+        });
+        $topReadComicsDaily = Cache::remember('sidebar.top_daily', 3600, function () {
+            return Comic::orderByDesc('view_day')->with('lastChapter')->limit(6)->get();
+        });
+        $topReadComicsWeekly = Cache::remember('sidebar.top_weekly', 3600, function () {
+            return Comic::orderByDesc('view_week')->with('lastChapter')->limit(6)->get();
+        });
         return view("/users/detail", compact(
             'comic',
             'follow',
@@ -214,15 +233,15 @@ class HomeController extends Controller
             '{{$comic->origin_name}}' => $comic->origin_name,
             '{{$chapterSelected->name}}' => $chapterSelected->name,
         ];
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = str_replace(array_keys($replacements), array_values($replacements), $seo[8]->value);
         SEOTools::setTitle($title);
-        $description = "Đọc truyện tranh " . $comic->name . ($comic->origin_name ? " - " . $comic->origin_name : "") . " chap " . $chapterSelected->name . " tiếng việt. Mới nhất nhanh nhất tại " . env('APP_NAME');
+        $description = "Đọc truyện tranh " . $comic->name . ($comic->origin_name ? " - " . $comic->origin_name : "") . " chap " . $chapterSelected->name . " tiếng việt. Mới nhất nhanh nhất tại " . config('app.name');
         SEOTools::setDescription($description);
         SEOMeta::addKeyword("{$comic->name},{$comic->name} tiếng việt,đọc truyện {$comic->name},truyện {$comic->name}, truyện {$comic->name} chap {$chapterSelected->name}");
         SEOTools::opengraph()->addProperty('type', 'article');
         SEOTools::opengraph()->addImage($comic->thumbnail);
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         $metaHtml = $seo[6]->value;
@@ -234,13 +253,13 @@ class HomeController extends Controller
 
     public function showNewUpdate(Request $request)
     {
-        $seo = DB::table('seo')->get();
-        $title = 'Truyện mới cập nhật - ' . env('APP_NAME');
+        $seo = $this->getSeoSettings();
+        $title = 'Truyện mới cập nhật - ' . config('app.name');
         SEOTools::setTitle($title);
-        SEOTools::setDescription("Danh sách truyện tranh comics, manga, manhua, manhwa mới cập nhật tại " . env('APP_NAME'));
+        SEOTools::setDescription("Danh sách truyện tranh comics, manga, manhua, manhwa mới cập nhật tại " . config('app.name'));
         SEOMeta::addKeyword("truyện mới cập nhật, truyện tranh mới");
         SEOTools::opengraph()->addProperty('type', 'website');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         $metaHtml = $seo[6]->value;
@@ -298,21 +317,27 @@ class HomeController extends Controller
                 'list' => "<center>Không có kết quả phù hợp</center>"
             ]);
         }
-        $comics = Comic::where('name', 'like', '%' . $query . '%')->orWhere('slug', 'like', '%' . $query . '%')->orWhere('origin_name', 'like', '%' . $query . '%')->limit(10)->get();
-        $msg = "";
-        if (count($comics) == 0) {
+        $comics = Comic::select('name', 'slug', 'thumbnail')
+            ->where('name', 'like', '%' . $query . '%')
+            ->orWhere('slug', 'like', '%' . $query . '%')
+            ->orWhere('origin_name', 'like', '%' . $query . '%')
+            ->limit(10)
+            ->get();
+        if ($comics->isEmpty()) {
             return response()->json([
                 'ok' => 1,
                 'list' => "<center>Không có kết quả phù hợp</center>"
             ]);
-        } else {
-            foreach ($comics as $comic) {
-                $msg .= "<div class='li_search'><a href='" . route('detail', $comic->slug) . "'>
-                <div class='img'><img src='" . $comic->thumbnail . "' alt='" . $comic->name . "'></div>
-                <div class='info'>" . $comic->name . "</div>
-
-                </a></div>";
-            }
+        }
+        $msg = "";
+        foreach ($comics as $comic) {
+            $name = e($comic->name);
+            $thumbnail = e($comic->thumbnail);
+            $url = route('detail', $comic->slug);
+            $msg .= "<div class='li_search'><a href='{$url}'>
+            <div class='img'><img src='{$thumbnail}' alt='{$name}'></div>
+            <div class='info'>{$name}</div>
+            </a></div>";
         }
         return response()->json([
             'ok' => 1,
@@ -325,9 +350,13 @@ class HomeController extends Controller
         if (!Auth::check()) {
             return response()->json(['data' => false, 'status' => 401], 401);
         }
+        $request->validate(['vote' => 'required|integer|min:1|max:5']);
         $user = Auth::user();
         $check = DB::table('voting')->where('user_id', $user->id)->where('comic_id', $id)->first();
         $comic = Comic::find($id);
+        if (!$comic) {
+            return response()->json(['data' => false, 'status' => 404], 404);
+        }
 
         if ($check) {
             DB::table('voting')->where('user_id', $user->id)->where('comic_id', $id)->update([
@@ -386,6 +415,10 @@ class HomeController extends Controller
         if (!Auth::check()) {
             return response()->json(['data' => null, 'status' => 401], 401);
         }
+        $request->validate([
+            'mangaId' => 'required|integer|exists:comics,id',
+            'content' => 'required|string|max:3000',
+        ]);
         $user = Auth::user();
         $comment = Comment::create([
             'user_id' => $user->id,
@@ -474,31 +507,17 @@ class HomeController extends Controller
 
     public function upView($table, $id)
     {
-        $firstDayOfWeek = Carbon::now()->startOfWeek();
-        $firstDayOfMonth = Carbon::now()->startOfMonth();
         $today = Carbon::now()->format('Y-m-d');
-        $comic = Comic::find($id);
-        $viewTotal = $comic->getAttributes()['view_total'];
-        $comic->view_total = $viewTotal + 1;
-        if ($today != Carbon::parse($comic->upview_at)->format('Y-m-d')) {
-            $comic->view_day = 1;
-        } else {
-            $comic->view_day += 1;
-        }
-        if ($firstDayOfWeek->isToday()) {
-            $comic->view_week = 1;
-        } else {
-            $comic->view_week += 1;
-        }
-        if ($firstDayOfMonth->isToday()) {
-            $comic->view_month = 1;
-        } else {
-            $comic->view_month += 1;
-        }
-        $comic->upview_at = now();
-        $comic->timestamps = false;
-        $comic->save();
-        $comic->timestamps = true;
+        $firstDayOfWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $firstDayOfMonth = Carbon::now()->startOfMonth()->format('Y-m-d');
+
+        DB::table('comics')->where('id', $id)->update([
+            'view_total' => DB::raw('view_total + 1'),
+            'view_day' => DB::raw("CASE WHEN DATE(upview_at) != '{$today}' THEN 1 ELSE view_day + 1 END"),
+            'view_week' => DB::raw("CASE WHEN DATE('{$firstDayOfWeek}') = DATE('{$today}') AND DATE(upview_at) < '{$today}' THEN 1 ELSE view_week + 1 END"),
+            'view_month' => DB::raw("CASE WHEN DATE('{$firstDayOfMonth}') = DATE('{$today}') AND DATE(upview_at) < '{$today}' THEN 1 ELSE view_month + 1 END"),
+            'upview_at' => now(),
+        ]);
     }
 
     public function upExp(Request $request)
@@ -573,15 +592,15 @@ class HomeController extends Controller
 
     public function showCategory(Request $request)
     {
-        $seo = DB::table('seo')->get();
-        $title = 'Kho tổng hợp truyện tranh miễn phí, cập nhật truyện full mới nhất - ' . env('APP_NAME');
+        $seo = $this->getSeoSettings();
+        $title = 'Kho tổng hợp truyện tranh miễn phí, cập nhật truyện full mới nhất - ' . config('app.name');
         SEOTools::setTitle($title);
-        $description = env('APP_NAME') . ' là kho khổng lồ sưu tầm truyện tranh đủ thể loại manga, manhua, manhwa,marvel comics,dc comics hot nhất, cập nhật liên tục';
+        $description = config('app.name') . ' là kho khổng lồ sưu tầm truyện tranh đủ thể loại manga, manhua, manhwa,marvel comics,dc comics hot nhất, cập nhật liên tục';
         SEOTools::setDescription($description);
-        $keyword = 'truyện tranh,' . env('APP_NAME');
+        $keyword = 'truyện tranh,' . config('app.name');
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');
@@ -608,7 +627,7 @@ class HomeController extends Controller
             '{{$category->name}}' => $category->name,
             '{{$category->slug}}' => $category->slug,
         ];
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = str_replace(array_keys($replacements), array_values($replacements), $seo[9]->value);
         SEOTools::setTitle($title);
         $description = str_replace(array_keys($replacements), array_values($replacements), $seo[10]->value);
@@ -616,7 +635,7 @@ class HomeController extends Controller
         $keyword = str_replace(array_keys($replacements), array_values($replacements), $seo[11]->value);
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');
@@ -673,7 +692,7 @@ class HomeController extends Controller
             '{{$author->name}}' => $author->name,
             '{{$author->slug}}' => $author->slug,
         ];
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = str_replace(array_keys($replacements), array_values($replacements), $seo[12]->value);
         SEOTools::setTitle($title);
         $description = str_replace(array_keys($replacements), array_values($replacements), $seo[13]->value);
@@ -681,7 +700,7 @@ class HomeController extends Controller
         $keyword = str_replace(array_keys($replacements), array_values($replacements), $seo[14]->value);
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');
@@ -841,7 +860,9 @@ class HomeController extends Controller
     public function changeServer(Request $request)
     {
         $id = $request->id;
-        $images = DB::table('chapterimgs')->where('chapter_id', $id)->orderBy('page')->get();
+        $images = Cache::remember("chapter_images.{$id}", 3600, function () use ($id) {
+            return DB::table('chapterimgs')->where('chapter_id', $id)->orderBy('page')->get();
+        });
         return response()->json([
             'images' => $images
         ], 200);
@@ -937,15 +958,15 @@ class HomeController extends Controller
             $comics = Comic::orderByDesc('view_month')->with('chapters')->limit(12)->get();
         }
 
-        $seo = DB::table('seo')->get();
-        $title = env('APP_NAME') . ' tranh hot trending đang được xem nhiều nhất | ' . env('APP_NAME');
+        $seo = $this->getSeoSettings();
+        $title = config('app.name') . ' tranh hot trending đang được xem nhiều nhất | ' . config('app.name');
         SEOTools::setTitle($title);
-        $description = env('APP_NAME') . ' cập nhật truyện hot mới nhất trên thị trường. Đọc truyện tranh online đang top trending cập nhật mới nhất tại ' . env('APP_NAME');
+        $description = config('app.name') . ' cập nhật truyện hot mới nhất trên thị trường. Đọc truyện tranh online đang top trending cập nhật mới nhất tại ' . config('app.name');
         SEOTools::setDescription($description);
-        $keyword = 'Truyện Hot,' . env('APP_NAME');
+        $keyword = 'Truyện Hot,' . config('app.name');
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');
@@ -956,7 +977,7 @@ class HomeController extends Controller
 
     public function showNews()
     {
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = 'Tin tức truyện tranh mới nhất';
         SEOTools::setTitle($title);
         $description = 'Tổng hợp các thông tin về truyện tranh được cập nhật mới nhất';
@@ -964,7 +985,7 @@ class HomeController extends Controller
         $keyword = 'tin tức, blog tin tức, tin truyện';
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');
@@ -996,7 +1017,7 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $seo = DB::table('seo')->get();
+        $seo = $this->getSeoSettings();
         $title = $blog->title;
         SEOTools::setTitle($title);
         $description = $blog->meta_description;
@@ -1004,7 +1025,7 @@ class HomeController extends Controller
         $keyword = $blog->meta_keywords;
         SEOMeta::addKeyword($keyword);
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setSiteName(env('APP_NAME'));
+        SEOTools::opengraph()->setSiteName(config('app.name'));
         SEOTools::opengraph()->setUrl(url()->current());
         SEOMeta::setCanonical(url()->current());
         SEOMeta::addMeta('article:published_time', now(), 'property');

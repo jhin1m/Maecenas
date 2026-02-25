@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Đăng Nhập - {{env('APP_NAME')}}</title>
+    <title>Đăng Nhập - {{config('app.name')}}</title>
     <meta name="robots" content="nofollow, noindex">
     <link rel="stylesheet" href="{{ asset('assets/css/global.css')}}">
 </head>
@@ -51,8 +51,8 @@
                 <img src="/assets/images/login_image.png" class="absolute z-0 hidden -translate-x-1/2 w-80 left-1/2 top-40 lg:block" alt="">
                 <div class="z-20 relative h-[350px] lg:block hidden">
                     <div class="absolute flex flex-col items-center -translate-x-1/2 -translate-y-4 top-full w-80 left-1/2">
-                        <p class="mb-4 text-3xl font-semibold font-haffer"> {{env('APP_NAME')}} </p>
-                        <p class="mb-6 text-sm text-center gradient-text-gray">Hãy tham gia ngay {{env('APP_NAME')}} để đọc thêm nhiều truyện hay, cập nhật sớm nhất và miễn phí.</p>
+                        <p class="mb-4 text-3xl font-semibold font-haffer"> {{config('app.name')}} </p>
+                        <p class="mb-6 text-sm text-center gradient-text-gray">Hãy tham gia ngay {{config('app.name')}} để đọc thêm nhiều truyện hay, cập nhật sớm nhất và miễn phí.</p>
                         <a href="{{route('showSearch')}}" class="p-4 text-sm font-medium border rounded-full border-border-gray bg-active-background">Xem tất cả truyện</a>
                     </div>
                 </div>

@@ -112,19 +112,24 @@ if (button) {
 
     var lastScrollTop = 0;
 
-    // Show/hide button based on scroll direction
+    // Show/hide button based on scroll direction (throttled)
+    var scrollTicking = false;
     window.addEventListener('scroll', function () {
-        var scrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-        if (scrollTop < lastScrollTop && scrollTop > 100) {
-            // Scrolling up
-            button.style.opacity = '1';
-        } else {
-            // Scrolling down
-            button.style.opacity = '0';
+        if (!scrollTicking) {
+            requestAnimationFrame(function () {
+                var scrollTop =
+                    window.pageYOffset || document.documentElement.scrollTop;
+                if (scrollTop < lastScrollTop && scrollTop > 100) {
+                    button.style.opacity = '1';
+                } else {
+                    button.style.opacity = '0';
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+                scrollTicking = false;
+            });
+            scrollTicking = true;
         }
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
-    });
+    }, { passive: true });
 
     // Add click event to scroll to top
     button.addEventListener('click', function () {

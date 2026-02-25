@@ -70,21 +70,13 @@ class ComicController extends Controller
 
         $categories = json_decode($request->categories, true);
         if(is_array($categories) && count($categories) > 0){
-            foreach ($categories as $category) {
-                DB::table('comic_categories')->insert([
-                    'comic_id' => $id,
-                    'category_id' => $category
-                ]);
-            }
+            $categoryRows = array_map(fn($cat) => ['comic_id' => $id, 'category_id' => $cat], $categories);
+            DB::table('comic_categories')->insert($categoryRows);
         }
         $authors = json_decode($request->authors, true);
         if(is_array($authors) && count($authors) > 0){
-            foreach ($authors as $author) {
-                DB::table('author_comic')->insert([
-                    'id_comic' => $id,
-                    'id_author' => $author
-                ]);
-            }
+            $authorRows = array_map(fn($author) => ['id_comic' => $id, 'id_author' => $author], $authors);
+            DB::table('author_comic')->insert($authorRows);
         }
         return response()->json([
             'status' => 'success',
@@ -118,22 +110,14 @@ class ComicController extends Controller
         DB::table('comic_categories')->where('comic_id', $id)->delete();
         $categories = json_decode($request->categories, true);
         if(is_array($categories) && count($categories) > 0){
-            foreach ($categories as $category) {
-                DB::table('comic_categories')->insert([
-                    'comic_id' => $id,
-                    'category_id' => $category
-                ]);
-            }
+            $categoryRows = array_map(fn($cat) => ['comic_id' => $id, 'category_id' => $cat], $categories);
+            DB::table('comic_categories')->insert($categoryRows);
         }
         DB::table('author_comic')->where('id_comic', $id)->delete();
         $authors = json_decode($request->authors, true);
         if(is_array($authors) && count($authors) > 0){
-            foreach ($authors as $author) {
-                DB::table('author_comic')->insert([
-                    'id_comic' => $id,
-                    'id_author' => $author
-                ]);
-            }
+            $authorRows = array_map(fn($author) => ['id_comic' => $id, 'id_author' => $author], $authors);
+            DB::table('author_comic')->insert($authorRows);
         }
         return response()->json([
             'status' => 'success',
@@ -194,13 +178,17 @@ class ComicController extends Controller
         ]);
 
         $contentArray = json_decode($request->contentArray, true);
+        $imageRows = [];
         $page = 1;
         foreach ($contentArray as $image) {
-            DB::table('chapterimgs')->insert([
+            $imageRows[] = [
                 'chapter_id' => $idChapter,
                 'page' => $page++,
                 'link' => $image,
-            ]);
+            ];
+        }
+        if (!empty($imageRows)) {
+            DB::table('chapterimgs')->insert($imageRows);
         }
 
         return response()->json([
@@ -363,12 +351,16 @@ class ComicController extends Controller
                 usort($images, function ($a, $b) {
                     return strnatcmp(basename($a), basename($b));
                 });
+                $imageRows = [];
                 foreach ($images as $image => $value) {
-                    DB::table('chapterimgs')->insert([
+                    $imageRows[] = [
                         'chapter_id' => $chapter->id,
                         'page' => $image,
-                        'link' => env('APP_STORAGE') . '/' . $value,
-                    ]);
+                        'link' => config('app.storage_url', env('APP_STORAGE')) . '/' . $value,
+                    ];
+                }
+                if (!empty($imageRows)) {
+                    DB::table('chapterimgs')->insert($imageRows);
                 }
             } else {
                 return response()->json([

@@ -12,7 +12,7 @@ class PageController extends Controller
      */
     private function showStaticPage(string $title, string $view)
     {
-        SEOTools::setTitle($title . ' - ' . env('APP_NAME'));
+        SEOTools::setTitle($title . ' - ' . config('app.name'));
 
         return view('users.pages.static', [
             'title' => $title,

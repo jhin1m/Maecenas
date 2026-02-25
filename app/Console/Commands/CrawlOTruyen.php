@@ -137,23 +137,25 @@ class CrawlOTruyen extends Command
                             $newChapter->chapter_number = $chapter['chapter_name'];
                             $newChapter->save();
 
-                            foreach ($dataChapter['data']['item']['chapter_image'] as $image) {
-                                DB::table('chapterimgs')->insert([
-                                    'chapter_id' => $newChapter->id,
-                                    'page' => $image['image_page'],
-                                    'link' => $url . "/" . $image['image_file'],
-                                ]);
+                            $imageRows = array_map(fn($image) => [
+                                'chapter_id' => $newChapter->id,
+                                'page' => $image['image_page'],
+                                'link' => $url . "/" . $image['image_file'],
+                            ], $dataChapter['data']['item']['chapter_image']);
+                            if (!empty($imageRows)) {
+                                foreach (array_chunk($imageRows, 100) as $chunk) {
+                                    DB::table('chapterimgs')->insert($chunk);
+                                }
                             }
                         } catch (\Exception $e) {
                             $this->error($e->getMessage());
                         }
 
-                        Comic::where('id', $idComic)->update([
-                            'updated_at' => now(),
-                        ]);
-
                         $this->info("Crawl chương " . $chapter['chapter_name'] . " thành công.");
                     }
+                    Comic::where('id', $idComic)->update([
+                        'updated_at' => now(),
+                    ]);
                 }
             } catch (\Exception $e) {
                 $this->error($e->getMessage());

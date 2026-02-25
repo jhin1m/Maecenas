@@ -76,7 +76,7 @@
                                         </div>
                                     </div>
                                     <div class="sort-des">
-                                        <h2 class="label">Tóm tắt nội dung truyện {{$comic->name}} tại {{env('APP_NAME')}}
+                                        <h2 class="label">Tóm tắt nội dung truyện {{$comic->name}} tại {{config('app.name')}}
                                         </h2>
                                         <div class="line-clamp">
                                             {!! $comic->content !!}
@@ -647,7 +647,7 @@
                                             {{$chapter->views ?? 0}}
                                         </span>
                                         <span class="ll-trans">
-                                            {{env('APP_NAME')}}
+                                            {{config('app.name')}}
                                         </span>
                                     </div>
                                 @endforeach

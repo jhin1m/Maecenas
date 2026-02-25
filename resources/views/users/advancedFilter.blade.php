@@ -4,9 +4,9 @@
 @endphp
 
 @section('metadata')
-    <title>{{$currentQuery['keyword'] ?? ''}} - Đọc truyện {{$currentQuery['keyword'] ?? ''}} mới nhất | {{env('APP_NAME')}}</title>
-    <meta property="og:title" content="Truyện {{$currentQuery['keyword'] ?? ''}} mới nhất, truyện full chap đầy đủ. Thông tin về {{$currentQuery['keyword'] ?? ''}} hay cập nhật mới nhất tại {{env('APP_NAME')}}">
-    <meta name="keywords" content="{{$currentQuery['keyword'] ?? ''}},{{env('APP_NAME')}},đọc truyện,truyện tranh,truyện full">
+    <title>{{$currentQuery['keyword'] ?? ''}} - Đọc truyện {{$currentQuery['keyword'] ?? ''}} mới nhất | {{config('app.name')}}</title>
+    <meta property="og:title" content="Truyện {{$currentQuery['keyword'] ?? ''}} mới nhất, truyện full chap đầy đủ. Thông tin về {{$currentQuery['keyword'] ?? ''}} hay cập nhật mới nhất tại {{config('app.name')}}">
+    <meta name="keywords" content="{{$currentQuery['keyword'] ?? ''}},{{config('app.name')}},đọc truyện,truyện tranh,truyện full">
 @endsection
 
 @section('content')

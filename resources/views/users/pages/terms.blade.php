@@ -1,4 +1,4 @@
-<p>Bằng việc truy cập và sử dụng website <strong>{{ env('APP_NAME') }}</strong>, bạn đồng ý tuân thủ các điều khoản dịch vụ sau:</p>
+<p>Bằng việc truy cập và sử dụng website <strong>{{ config('app.name') }}</strong>, bạn đồng ý tuân thủ các điều khoản dịch vụ sau:</p>
 
 <h3>1. Điều khoản sử dụng</h3>
 <p>Bạn đồng ý sử dụng website chỉ cho mục đích đọc truyện tranh cá nhân, không sao chép, phân phối lại nội dung mà không có sự đồng ý của chúng tôi.</p>

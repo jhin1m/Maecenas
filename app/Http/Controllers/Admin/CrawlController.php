@@ -130,12 +130,13 @@ class CrawlController extends Controller
                 $domain = $dataChapter['data']['domain_cdn'];
                 $path = $dataChapter['data']['item']['chapter_path'];
                 $url = $domain . "/" . $path;
-                foreach ($dataChapter['data']['item']['chapter_image'] as $image) {
-                    DB::table('chapterimgs')->insert([
-                        'chapter_id' => $idChapter,
-                        'page' => $image['image_page'],
-                        'link' => $url . "/" . $image['image_file'],
-                    ]);
+                $imageRows = array_map(fn($image) => [
+                    'chapter_id' => $idChapter,
+                    'page' => $image['image_page'],
+                    'link' => $url . "/" . $image['image_file'],
+                ], $dataChapter['data']['item']['chapter_image']);
+                if (!empty($imageRows)) {
+                    DB::table('chapterimgs')->insert($imageRows);
                 }
             }
             $nameChapter = $chapter['chapter_name'];
@@ -156,12 +157,13 @@ class CrawlController extends Controller
                 $responseChapter = $client->request('GET', env('LINK_NCOMIC_API') . 'comics/' . $comic->slug . '/chapters/' . $chapter['id']);
                 $contentChapter = $responseChapter->getBody()->getContents();
                 $dataChapter = json_decode($contentChapter, true);
-                foreach ($dataChapter['images'] as $image) {
-                    DB::table('chapterimgs')->insert([
-                        'chapter_id' => $idChapter,
-                        'page' => $image['page'],
-                        'link' => $image['src'],
-                    ]);
+                $imageRows = array_map(fn($image) => [
+                    'chapter_id' => $idChapter,
+                    'page' => $image['page'],
+                    'link' => $image['src'],
+                ], $dataChapter['images']);
+                if (!empty($imageRows)) {
+                    DB::table('chapterimgs')->insert($imageRows);
                 }
             }
             $nameChapter = $chapterNumber;
@@ -200,12 +202,16 @@ class CrawlController extends Controller
                             'updated_at' => now()
                         ]);
 
+                        $imageRows = [];
                         foreach ($images as $index => $imageUrl) {
-                            DB::table('chapterimgs')->insert([
+                            $imageRows[] = [
                                 'chapter_id' => $idChapter,
                                 'page' => $index + 1,
                                 'link' => $imageUrl,
-                            ]);
+                            ];
+                        }
+                        if (!empty($imageRows)) {
+                            DB::table('chapterimgs')->insert($imageRows);
                         }
                     } else {
                         return response()->json("Không tìm thấy ảnh chương " . $nameChapter, 404);
