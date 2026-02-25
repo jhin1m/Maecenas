@@ -22,7 +22,7 @@ class Comment extends Model
 
     public function replies()
     {
-        return $this->hasMany(Comment::class, 'parent_id')->with('user', 'replies')->orderBy('created_at', 'desc');
+        return $this->hasMany(Comment::class, 'parent_id')->with('user:id,name,avatar')->orderBy('created_at', 'desc');
     }
 
     public function user()

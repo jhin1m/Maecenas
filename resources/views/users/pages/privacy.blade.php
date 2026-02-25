@@ -1,4 +1,4 @@
-<p>Chính sách bảo mật này mô tả cách <strong>{{ env('APP_NAME') }}</strong> thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn.</p>
+<p>Chính sách bảo mật này mô tả cách <strong>{{ config('app.name') }}</strong> thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn.</p>
 
 <h3>1. Thông tin thu thập</h3>
 <p>Chúng tôi thu thập thông tin khi bạn đăng ký tài khoản: tên, email, và mật khẩu (được mã hóa). Chúng tôi cũng thu thập dữ liệu sử dụng website thông qua cookie.</p>

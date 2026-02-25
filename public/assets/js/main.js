@@ -511,7 +511,6 @@ function setCookies(name, value, hours = 8760) {
     const date = new Date();
     date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
     expires = "; expires=" + date.toUTCString();
-    console.log(name + "=" + encodeURIComponent(value || "") + expires + "; path=/" );
     document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/";
 }
 function setCookie2(name, value, time) {

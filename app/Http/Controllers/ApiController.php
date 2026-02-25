@@ -27,7 +27,7 @@ class ApiController extends Controller
 
         $sitemapIndex = SitemapIndex::create();
 
-        Category::query()->orderBy('id')->chunk(500, function ($categories) use ($sitemapIndex) {
+        Category::query()->select('id', 'slug')->orderBy('id')->chunk(500, function ($categories) use ($sitemapIndex) {
             $sitemap = Sitemap::create();
 
             foreach ($categories as $category) {
@@ -40,7 +40,7 @@ class ApiController extends Controller
             $sitemapIndex->add('/' . $sitemapPath);
         });
 
-        Comic::query()->orderBy('id')->chunk(500, function ($comics) use ($sitemapIndex) {
+        Comic::query()->select('id', 'slug')->orderBy('id')->chunk(500, function ($comics) use ($sitemapIndex) {
             $sitemap = Sitemap::create();
 
             foreach ($comics as $comic) {

@@ -27,9 +27,9 @@
                 <img alt="" src="/assets/images/random.png" width="24" height="24" />
             </a>
             <a class="logo" title="Truyện tranh online" href="/">
-                <img class="logo-light" alt="Đọc truyện tranh miễn phí tại {{env('APP_NAME')}}" src="/logo.png"
+                <img class="logo-light" alt="Đọc truyện tranh miễn phí tại {{config('app.name')}}" src="/logo.png"
                     width="150" height="54" />
-                <img class="logo-dark" alt="Đọc truyện tranh miễn phí tại {{env('APP_NAME')}}" src="/logo.png"
+                <img class="logo-dark" alt="Đọc truyện tranh miễn phí tại {{config('app.name')}}" src="/logo.png"
                     width="150" height="54" />
             </a>
 

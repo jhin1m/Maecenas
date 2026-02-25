@@ -1,6 +1,6 @@
 @extends('users.layout.main')
 @section('metadata')
-    <title>{{ __('string.login') }} - {{env('APP_NAME')}}</title>
+    <title>{{ __('string.login') }} - {{config('app.name')}}</title>
 @endsection
 
 @section('class') vi-vn site1 @endsection

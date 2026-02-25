@@ -124,7 +124,7 @@
                 </div>
 
             </div>
-            <h1 class="main-title">{{env('APP_NAME')}} Chính Thức - Đọc truyện tranh miễn phí</h1>
+            <h1 class="main-title">{{config('app.name')}} Chính Thức - Đọc truyện tranh miễn phí</h1>
         </section>
 
         <section id="manga-trend" class="container">
@@ -632,7 +632,7 @@
         </section>
 
         <section id="manga-feature_genres" class="container">
-            <h2 class="m-title title">Thể loại nổi bật<span class="sub">Các thể loại tại {{env('APP_NAME')}}</span></h2>
+            <h2 class="m-title title">Thể loại nổi bật<span class="sub">Các thể loại tại {{config('app.name')}}</span></h2>
             <div class="top-genres splide">
                 <div class="splide__track">
                     <div class="splide__list">

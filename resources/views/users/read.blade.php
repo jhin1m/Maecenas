@@ -87,10 +87,10 @@
 
                 <div id="manga-images" data-mode="default">
                     <div class="main-images text-center position-relative" id="read-chaps">
-                        @foreach ($chapterSelected->images as $image)
+                        @foreach ($chapterSelected->images as $index => $image)
                             <div id="img-id-{{$image->id}}" class="mi-item" data-id="{{$image->id}}">
                                 <div class="loaded i-right">
-                                    <img class="reading-img lozad" data-src="{{$image->link}}">
+                                    <img class="reading-img lozad" data-src="{{$image->link}}" alt="Trang {{$index + 1}}" width="800" height="1200" @if($index < 3) loading="eager" @else loading="lazy" @endif>
                                 </div>
                             </div>
                         @endforeach

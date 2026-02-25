@@ -1,4 +1,4 @@
-<p>Website <strong>{{ env('APP_NAME') }}</strong> xin tuyên bố miễn trừ trách nhiệm như sau:</p>
+<p>Website <strong>{{ config('app.name') }}</strong> xin tuyên bố miễn trừ trách nhiệm như sau:</p>
 
 <h3>1. Nội dung bên thứ ba</h3>
 <p>Tất cả nội dung truyện tranh trên website được thu thập từ các nguồn công khai trên Internet. Chúng tôi không chịu trách nhiệm về tính chính xác hoặc bản quyền của nội dung từ bên thứ ba.</p>

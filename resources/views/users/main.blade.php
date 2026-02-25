@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
+    use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Facades\DB;
-    $shortcut = DB::table('seo')->where('key', 'shortcut')->first();
+    $shortcut = Cache::remember('seo_shortcut', 3600, function () {
+        return DB::table('seo')->where('key', 'shortcut')->first();
+    });
 @endphp
 
 <head>
@@ -18,8 +21,6 @@
     <link rel="stylesheet" href="{{ asset('assets/theme/css/style.css')}}">
     <link rel="stylesheet" href="{{ asset('assets/theme/css/responsive.css')}}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-    <script src="{{ asset('assets/js/jquery-3.2.1.min.js') }}"></script>
     @stack('header')
     @yield('metadata')
     @yield('styles')

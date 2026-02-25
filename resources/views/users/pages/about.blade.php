@@ -1,4 +1,4 @@
-<p>Chào mừng bạn đến với <strong>{{ env('APP_NAME') }}</strong>!</p>
+<p>Chào mừng bạn đến với <strong>{{ config('app.name') }}</strong>!</p>
 
 <p>Chúng tôi là nền tảng đọc truyện tranh online hàng đầu, cung cấp cho bạn đọc kho truyện tranh đa dạng và phong phú nhất.</p>
 

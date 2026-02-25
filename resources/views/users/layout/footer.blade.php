@@ -6,8 +6,8 @@
                     <a href="/" class="logo">
                         <img class="" alt="Truyện tranh online mới nhất" src="/logo.png" width="146" height="52">
                     </a>
-                    <p class="mt-3">{{env('APP_NAME')}} là website đọc <b>truyện tranh</b> online uy tín hàng đầu Việt
-                        Nam. Tất cả các truyện trên website đăng tải được {{env('APP_NAME')}} biên dịch và tổng hợp từ
+                    <p class="mt-3">{{config('app.name')}} là website đọc <b>truyện tranh</b> online uy tín hàng đầu Việt
+                        Nam. Tất cả các truyện trên website đăng tải được {{config('app.name')}} biên dịch và tổng hợp từ
                         nhiều nguồn trên Internet.</p>
                 </div>
             </div>
